@@ -1,0 +1,271 @@
+---
+title: "Hands-on Exercise 1: Geospatial Data Wrangling with R"
+editor: visual
+---
+
+## Overview
+
+In this hands-on exercise, I learn how to import and wrangle geospatial data with appropriate R packages
+
+## 1.1 Getting started
+
+In this hands-on exercise, two R packages will be used. They are:
+
+-   **sf** for importing, managing, and processing geospatial data, and
+
+-   **tidyverse** for performing data science tasks such as importing, wrangling and visualising data.
+
+Tidyverse consists of a family of R packages. In this hands-on exercise, the following packages will be used:
+
+-   **readr** for importing csv data,
+
+-   **readxl** for importing Excel worksheet,
+
+-   **tidyr** for manipulating data,
+
+-   **dplyr** for transforming data, and
+
+-   **ggplot2** for visualising data
+
+```{r}
+pacman::p_load(sf,tidyverse)
+```
+
+## 1.2 Importing Geospatial Data
+
+In this section, I learn how to import the following geospatial data into R by using [*st_read()*](https://r-spatial.github.io/sf/reference/st_read.html) of **sf** package.
+
+-   `MP14_SUBZONE_WEB_PL`, a polygon feature layer in ESRI shapefile format,
+
+-   `CyclingPath`, a line feature layer in ESRI shapefile format, and
+
+-   `PreSchool`, a point feature layer in kml file format.
+
+### 1.2.1 Importing polygon feature Data
+
+-   The code chunk below uses *st_read()* function of **sf** package to import `MP14_SUBZONE_WEB_PL` shapefile into R as a polygon feature data frame.
+
+-   Note that when the input geospatial data is in shapefile format.
+
+-   Two arguments will be used, namely: `dsn` to define the data path and `layer` to provide the shapefile name. Also note that no extension such as .shp, .dbf, .prj and .shx are needed.
+
+```{r}
+mpsz = st_read(dsn = "data/geospatial", 
+                  layer = "MP14_SUBZONE_WEB_PL")
+```
+
+### 1.2.2 Importing polyline feature data in shapefile form
+
+```{r}
+cyclingpath = st_read(dsn = "data/geospatial", 
+                         layer = "CyclingPath")
+```
+
+### 1.2.3 Importing GIS data in kml format
+
+```{r}
+preschool = st_read("data/geospatial/pre-schools-location-kml.kml")
+```
+
+## 1.3 Checking the Content of A Simple Feature Data Frame
+
+### 1.3.1 Working with *st_geometry()*
+
+```{r}
+st_geometry(mpsz)
+```
+
+### 1.3.2 Working with glimpse()
+
+```{r}
+glimpse(mpsz)
+```
+
+### 1.3.3 Working with *head()*
+
+```{r}
+head(mpsz, n=5)  
+```
+
+## 1.4 Plotting the Geospatial Data
+
+```{r}
+plot(mpsz)
+```
+
+```{r}
+plot(st_geometry(mpsz))
+```
+
+```{r}
+plot(mpsz["PLN_AREA_N"])
+```
+
+## 
+
+1.5 Working with Projection
+
+### 1.5.1 Assigning EPSG code to a simple feature data frame
+
+```{r}
+st_crs(mpsz)
+```
+
+```{r}
+mpsz3414 <- st_transform(mpsz, 3414)
+```
+
+```{r}
+st_crs(mpsz3414)
+```
+
+### 1.5.2 Transforming the projection of preschool from wgs84 to svy21
+
+```{r}
+preschool3414 <- st_transform(preschool, 
+                              crs = 3414)
+```
+
+## 1.6 Importing and Converting An Aspatial Data
+
+### 1.6.1 Importing the aspatial data
+
+```{r}
+listings <- read_csv("data/aspatial/listings.csv")
+```
+
+```{r}
+list(listings) 
+```
+
+### 1.6.2 Creating a simple feature data frame from an aspatial data frame
+
+```{r}
+listings_sf <- st_as_sf(listings, 
+                       coords = c("longitude", "latitude"),
+                       crs=4326) %>%
+  st_transform(crs = 3414)
+```
+
+```{r}
+glimpse(listings_sf)
+```
+
+## 1.7 Geoprocessing with sf package
+
+### 1.7.1 Buffering
+
+```{r}
+buffer_cycling <- st_buffer(cyclingpath, 
+                               dist=5, nQuadSegs = 30)
+```
+
+```{r}
+buffer_cycling$AREA <- st_area(buffer_cycling)
+```
+
+```{r}
+sum(buffer_cycling$AREA)
+```
+
+### 1.7.2 Point-in-polygon count
+
+```{r}
+mpsz3414$`PreSch Count`<- lengths(st_intersects(mpsz3414, preschool3414))
+```
+
+```{r}
+summary(mpsz3414$`PreSch Count`)
+```
+
+```{r}
+top_n(mpsz3414, 1, `PreSch Count`)
+```
+
+```{r}
+mpsz3414$Area <- mpsz3414 %>%
+  st_area()
+```
+
+```{r}
+mpsz3414 <- mpsz3414 %>%
+  mutate(`PreSch Density` = `PreSch Count`/Area * 1000000)
+```
+
+## 1.8 Exploratary Data Analysis (EDA)
+
+```{r}
+hist(mpsz3414$`PreSch Density`)
+```
+
+```{r}
+ggplot(data=mpsz3414, 
+       aes(x= as.numeric(`PreSch Density`)))+
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  labs(title = "Are pre-school even distributed in Singapore?",
+       subtitle= "There are many planning sub-zones with a single pre-school, on the other hand, \nthere are two planning sub-zones with at least 20 pre-schools",
+      x = "Pre-school density (per km sq)",
+      y = "Frequency")
+
+
+```
+
+```{r}
+
+ggplot(data=mpsz3414, aes(x = as.numeric(`PreSch Density`), y = `PreSch Count`)) +
+    geom_point() +
+  labs(
+      x = "Pre-school density (per km sq)",
+      y = "Pre-school Count")
+```
+
+### 2.3.3 Importing Attribute Data into R
+
+```{r}
+popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
+```
+
+### 2.2.4 Data Preparation
+
+Before a thematic map can be prepared, I am required to prepare a data table with year 2020 values. The data table should include the variables PA, SZ, YOUNG, ECONOMY ACTIVE, AGED, TOTAL, DEPENDENCY.
+
+-   YOUNG: age group 0 to 4 until age groyup 20 to 24,
+
+-   ECONOMY ACTIVE: age group 25-29 until age group 60-64,
+
+-   AGED: age group 65 and above,
+
+-   TOTAL: all age group, and
+
+-   DEPENDENCY: the ratio between young and aged against economy active group
+
+#### 2.2.4.1 Data wrangling
+
+The following data wrangling and transformation functions will be used:
+
+-   *pivot_wider()* of **tidyr** package, and
+
+-   *mutate()*, *filter()*, *group_by()* and *select()* of **dplyr** package
+
+```{r}
+popdata2020 <- popdata %>%
+  filter(Time == 2020) %>%
+  group_by(PA, SZ, AG) %>%
+  summarise(`POP` = sum(`Pop`)) %>%
+  ungroup()%>%
+  pivot_wider(names_from=AG, 
+              values_from=POP) %>%
+  mutate(YOUNG = rowSums(.[3:6])
+         +rowSums(.[12])) %>%
+mutate(`ECONOMY ACTIVE` = rowSums(.[7:11])+
+rowSums(.[13:15]))%>%
+mutate(`AGED`=rowSums(.[16:21])) %>%
+mutate(`TOTAL`=rowSums(.[3:21])) %>%  
+mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
+/`ECONOMY ACTIVE`) %>%
+  select(`PA`, `SZ`, `YOUNG`, 
+       `ECONOMY ACTIVE`, `AGED`, 
+       `TOTAL`, `DEPENDENCY`)
+```
