@@ -1,9 +1,9 @@
 ---
-title: "Hands-on Exercise 1: Geospatial Data Wrangling with R"
+title: "Hands-on Exercise 1: Geospatial Data Wrangling and  Choropleth Mapping with R"
 editor: visual
 ---
 
-## Overview
+## 1. Overview
 
 In this hands-on exercise, I learn how to import and wrangle geospatial data with appropriate R packages
 
@@ -61,7 +61,7 @@ cyclingpath = st_read(dsn = "data/geospatial",
                          layer = "CyclingPath")
 ```
 
-### 1.2.3 Importing GIS data in kml format
+### use1.2.3 Importing GIS data in kml format
 
 ```{r}
 preschool = st_read("data/geospatial/pre-schools-location-kml.kml")
