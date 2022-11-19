@@ -1,5 +1,5 @@
 ---
-title: "Hands-on Exercise 1: Geospatial Data Wrangling with R"
+title: "Hands-on Exercise 1: Geospatial Data Wrangling and Chloropleth mapping with R"
 editor: visual
 ---
 
@@ -223,7 +223,7 @@ ggplot(data=mpsz3414, aes(x = as.numeric(`PreSch Density`), y = `PreSch Count`))
 
 # 2. Overview
 
-Choropleth mapping involves the symbolisation of enumeration units, such as countries, provinces, states, counties or census units, using area patterns or graduated colors. For example, a social scientist may need to use a choropleth map to portray the spatial distribution of aged population of Singapore by Master Plan 2014 Subzone Boundary.
+Choropleth mapping involves the symbolisation of enumeration units, such as countries, provinces, states, counties or census units, using area patterns or graduated colors.
 
 In this chapter, I will learn how to plot functional and truthful choropleth maps by using an R package called \*\*tmap\*\* package.
 
@@ -249,35 +249,13 @@ pacman::p_load(sf, tmap, tidyverse)
 
 ## 2.2 Importing Data into R
 
-### 2.2.1 The Data
-
-Two data set will be used to create the choropleth map. They are:
-
--   Master Plan 2014 Subzone Boundary (Web) (i.e. `MP14_SUBZONE_WEB_PL`) in ESRI shapefile format. This is a geospatial data based on URA Master Plan 2014. It consists of the geographical boundary of Singapore at the planning subzone level.
-
--   Singapore Residents by Planning Area / Subzone, Age Group, Sex and Type of Dwelling, June 2011-2020 in csv format (i.e. `respopagesextod2011to2020.csv`). This is an aspatial data fie. Although it does not contain any coordinates values, but it's PA and SZ fields can be used as unique identifiers to geocode to `MP14_SUBZONE_WEB_PL` shapefile.
-
-### 2.2.2 Importing Geospatial Data into R
-
-The code chunk below uses the *st_read()* function of **sf** package to import `MP14_SUBZONE_WEB_PL` shapefile into R as a simple feature data frame called `mpsz`.
-
-```{r}
-mpsz <- st_read(dsn = "data/geospatial", 
-                layer = "MP14_SUBZONE_WEB_PL")
-
-```
-
-```{r}
-mpsz
-```
-
-### 2.3.3 Importing Attribute Data into R
+### 2.2.1 Importing Attribute Data into R
 
 ```{r}
 popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
 ```
 
-### 2.2.4 Data Preparation
+### 2.2.2 Data Preparation
 
 Before a thematic map can be prepared, I am required to prepare a data table with year 2020 values. The data table should include the variables PA, SZ, YOUNG, ECONOMY ACTIVE, AGED, TOTAL, DEPENDENCY.
 
@@ -291,7 +269,7 @@ Before a thematic map can be prepared, I am required to prepare a data table wit
 
 -   DEPENDENCY: the ratio between young and aged against economy active group
 
-#### 2.2.4.1 Data wrangling
+#### 2.2.2.1 Data wrangling
 
 The following data wrangling and transformation functions will be used:
 
@@ -320,7 +298,7 @@ mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
        `TOTAL`, `DEPENDENCY`)
 ```
 
-#### 2.2.4.2 Joining the attribute data and geospatial data
+#### 2.2.2.2 Joining the attribute data and geospatial data
 
 Before we can perform the georelational join, one extra step is required to convert the values in PA and SZ fields to uppercase. This is because the values of PA and SZ fields are made up of upper- and lowercase. On the other, hand the SUBZONE_N and PLN_AREA_N are in uppercase.
 
