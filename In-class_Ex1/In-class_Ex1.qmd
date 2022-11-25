@@ -542,7 +542,7 @@ tmap_arrange(gdppc, w_avg_gdppc, asp=1, ncol=2)
 
 Note: For more effective comparison, it is advisable to use the core tmap mapping functions.
 
-#### 
+### 
 3.6.4 Spatial window sum
 
 The spatial window sum is the counter part of the window average, but without using row-standardized weights. To do this we assign binary weights to the neighbor structure that includes the diagonal element.
