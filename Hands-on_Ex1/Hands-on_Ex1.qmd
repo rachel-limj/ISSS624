@@ -5,7 +5,7 @@ editor: visual
 
 ## Overview
 
-In this hands-on exercise, I learn how to import and wrangle geospatial data with appropriate R packages
+In this hands-on exercise, I learnt how to import and wrangle geospatial data with appropriate R packages
 
 ## 1.1 Getting started
 
