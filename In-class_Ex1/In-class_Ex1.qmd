@@ -81,8 +81,7 @@ gdppc <- qtm(hunan, "GDPPC")
 tmap_arrange(basemap, gdppc, asp=1, ncol=2)
 ```
 
-## 
-3.3 Computing Contiguity Spatial Weights
+## 3.3 Computing Contiguity Spatial Weights
 
 In this section, I learnt how to use [*poly2nb()*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to **compute contiguity weight matrices** for the study area. This function builds a neighbours list based on regions with contiguous boundaries.
 

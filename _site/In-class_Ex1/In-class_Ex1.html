@@ -200,7 +200,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#performing-relational-join" id="toc-performing-relational-join" class="nav-link" data-scroll-target="#performing-relational-join">3.1.5 Performing relational join</a></li>
   </ul></li>
   <li><a href="#visualizing-regional-development-indicator" id="toc-visualizing-regional-development-indicator" class="nav-link" data-scroll-target="#visualizing-regional-development-indicator">3.2 Visualizing Regional Development Indicator</a></li>
-  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a>
+  <li><a href="#computing-contiguity-spatial-weights" id="toc-computing-contiguity-spatial-weights" class="nav-link" data-scroll-target="#computing-contiguity-spatial-weights">3.3 Computing Contiguity Spatial Weights</a>
   <ul class="collapse">
   <li><a href="#computing-queen-contiguity-based-neighbours" id="toc-computing-queen-contiguity-based-neighbours" class="nav-link" data-scroll-target="#computing-queen-contiguity-based-neighbours">3.3.1 Computing (QUEEN) contiguity based neighbours</a></li>
   <li><a href="#creating-rook-contiguity-based-neighbours" id="toc-creating-rook-contiguity-based-neighbours" class="nav-link" data-scroll-target="#creating-rook-contiguity-based-neighbours">3.3.2 Creating (ROOK) contiguity based neighbours</a></li>
@@ -210,14 +210,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <ul class="collapse">
   <li><a href="#determine-the-cut-off-distance" id="toc-determine-the-cut-off-distance" class="nav-link" data-scroll-target="#determine-the-cut-off-distance">3.4.1 Determine the cut-off distance</a></li>
   <li><a href="#computing-fixed-distance-weight-matrix" id="toc-computing-fixed-distance-weight-matrix" class="nav-link" data-scroll-target="#computing-fixed-distance-weight-matrix">3.4.2 Computing fixed distance weight matrix</a></li>
-  <li><a href="#section-2" id="toc-section-2" class="nav-link" data-scroll-target="#section-2"></a></li>
+  <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1"></a></li>
   </ul></li>
-  <li><a href="#section-4" id="toc-section-4" class="nav-link" data-scroll-target="#section-4"></a>
+  <li><a href="#section-3" id="toc-section-3" class="nav-link" data-scroll-target="#section-3"></a>
   <ul class="collapse">
   <li><a href="#row-standardised-weights-matrix" id="toc-row-standardised-weights-matrix" class="nav-link" data-scroll-target="#row-standardised-weights-matrix">3.5.1 Row-standardised weights matrix</a></li>
   </ul></li>
-  <li><a href="#section-5" id="toc-section-5" class="nav-link" data-scroll-target="#section-5"></a>
+  <li><a href="#section-4" id="toc-section-4" class="nav-link" data-scroll-target="#section-4"></a>
   <ul class="collapse">
+  <li><a href="#section-5" id="toc-section-5" class="nav-link" data-scroll-target="#section-5"></a></li>
   <li><a href="#section-6" id="toc-section-6" class="nav-link" data-scroll-target="#section-6"></a></li>
   <li><a href="#section-7" id="toc-section-7" class="nav-link" data-scroll-target="#section-7"></a></li>
   <li><a href="#section-8" id="toc-section-8" class="nav-link" data-scroll-target="#section-8"></a></li>
@@ -337,9 +338,8 @@ dbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...
 </div>
 </div>
 </section>
-<section id="section" class="level2">
-<h2 class="anchored" data-anchor-id="section"></h2>
-<p>3.3 Computing Contiguity Spatial Weights</p>
+<section id="computing-contiguity-spatial-weights" class="level2">
+<h2 class="anchored" data-anchor-id="computing-contiguity-spatial-weights">3.3 Computing Contiguity Spatial Weights</h2>
 <p>In this section, I learnt how to use <a href="https://r-spatial.github.io/spdep/reference/poly2nb.html"><em>poly2nb()</em></a> of <strong>spdep</strong> package to <strong>compute contiguity weight matrices</strong> for the study area. This function builds a neighbours list based on regions with contiguous boundaries.</p>
 <p>Passing a "queen" argument that takes TRUE or FALSE as options. The argument by default is set to TRUE, and returns a list of first order neighbours using the Queen criteria.</p>
 <section id="computing-queen-contiguity-based-neighbours" class="level3">
@@ -851,8 +851,8 @@ Average number of links: 3.681818 </code></pre>
 88 </code></pre>
 </div>
 </div>
-<section id="section-1" class="level4">
-<h4 class="anchored" data-anchor-id="section-1"></h4>
+<section id="section" class="level4">
+<h4 class="anchored" data-anchor-id="section"></h4>
 <p>3.4.2.1 Plotting fixed distance weight matrix</p>
 <p>Next, we will plot the distance weight matrix by using the code chunk below.</p>
 <div class="cell">
@@ -877,8 +877,8 @@ Average number of links: 3.681818 </code></pre>
 </div>
 </section>
 </section>
-<section id="section-2" class="level3">
-<h3 class="anchored" data-anchor-id="section-2"></h3>
+<section id="section-1" class="level3">
+<h3 class="anchored" data-anchor-id="section-1"></h3>
 <p>3.4.3 Computing adaptive distance weight matrix</p>
 <p>One of the characteristics of fixed distance weight matrix is that more densely settled areas (usually the urban areas) tend to have more neighbours and the less densely settled areas (usually the rural counties) tend to have lesser neighbours. Having many neighbours smoothes the neighbour relationship across more neighbours.</p>
 <p>It is possible to control the numbers of neighbours directly using k-nearest neighbours, either accepting asymmetric neighbours or imposing symmetry as shown in the code chunk below.</p>
@@ -996,8 +996,8 @@ Non-symmetric neighbours list</code></pre>
 </div>
 </div>
 <p>Notice that each county has six neighbours, no less no more!</p>
-<section id="section-3" class="level4">
-<h4 class="anchored" data-anchor-id="section-3"></h4>
+<section id="section-2" class="level4">
+<h4 class="anchored" data-anchor-id="section-2"></h4>
 <p>3.4.3.1 Plotting distance based neighbours</p>
 <p>We can plot the weight matrix using the code chunk below.</p>
 <div class="cell">
@@ -1010,8 +1010,8 @@ Non-symmetric neighbours list</code></pre>
 </section>
 </section>
 </section>
-<section id="section-4" class="level2">
-<h2 class="anchored" data-anchor-id="section-4"></h2>
+<section id="section-3" class="level2">
+<h2 class="anchored" data-anchor-id="section-3"></h2>
 <p>3.5 Weights based on IDW</p>
 <p>In this section, you will learn how to derive a spatial weight matrix based on Inversed Distance method.</p>
 <p>First, we will compute the distances between areas by using <a href="https://r-spatial.github.io/spdep/reference/nbdists.html"><em>nbdists()</em></a> of <strong>spdep</strong>.</p>
@@ -1357,8 +1357,8 @@ B 88 7744 8.786867 0.3776535 3.8137</code></pre>
 </div>
 </section>
 </section>
-<section id="section-5" class="level2">
-<h2 class="anchored" data-anchor-id="section-5"></h2>
+<section id="section-4" class="level2">
+<h2 class="anchored" data-anchor-id="section-4"></h2>
 <p>3.6 Application of Spatial Weight Matrix</p>
 <p>In this section, you will learn how to create four different spatial lagged variables, they are:</p>
 <ul>
@@ -1366,8 +1366,8 @@ B 88 7744 8.786867 0.3776535 3.8137</code></pre>
 <li><p>spatial lag as a sum of neighbouring values,</p></li>
 <li><p>spatial window average, and spatial window sum.</p></li>
 </ul>
-<section id="section-6" class="level3">
-<h3 class="anchored" data-anchor-id="section-6"></h3>
+<section id="section-5" class="level3">
+<h3 class="anchored" data-anchor-id="section-5"></h3>
 <p>3.6.1 Spatial lag with row-standardized weights</p>
 <p>Finally, we'll compute the <u>average neighbor GDPPC value</u> for each polygon. These values are often referred to as <strong>spatially lagged values</strong>.</p>
 <div class="cell">
@@ -1484,8 +1484,8 @@ Geodetic CRS:  WGS 84
 </div>
 </div>
 </section>
-<section id="section-7" class="level3">
-<h3 class="anchored" data-anchor-id="section-7"></h3>
+<section id="section-6" class="level3">
+<h3 class="anchored" data-anchor-id="section-6"></h3>
 <p>3.6.2 Spatial lag as a sum of neighboring values</p>
 <p>We can calculate spatial lag as a sum of neighboring values by <strong>assigning binary weights</strong>. This requires us to go back to our neighbors list, then apply a function that will assign binary weights, then we use <strong>glist =</strong> in the <strong>nb2listw</strong> function to explicitly assign these weights.</p>
 <p>We start by applying a function that will assign a value of 1 per each neighbor. This is done with <strong>lapply</strong>, which we have been using to manipulate the neighbors structure throughout the past notebooks. Basically it applies a function across each value in the neighbors structure.</p>
@@ -1575,8 +1575,8 @@ B 88 7744 448 896 10224</code></pre>
 </div>
 </div>
 </section>
-<section id="section-8" class="level3">
-<h3 class="anchored" data-anchor-id="section-8"></h3>
+<section id="section-7" class="level3">
+<h3 class="anchored" data-anchor-id="section-7"></h3>
 <p>3.6.3 Spatial window average</p>
 <p>The spatial window average uses <strong>row-standardized weights</strong> and <strong>includes the diagonal element</strong>. To do this in R, we need to go back to the neighbors structure and add the diagonal element before assigning weights. To begin we assign k6 to a new variable because we will directly alter its structure to add the diagonal elements.</p>
 <div class="cell">
@@ -1652,8 +1652,9 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 </div>
 </div>
 <p>Note: For more effective comparison, it is advisable to use the core tmap mapping functions.</p>
-<section id="section-9" class="level4">
-<h4 class="anchored" data-anchor-id="section-9"></h4>
+</section>
+<section id="section-8" class="level3">
+<h3 class="anchored" data-anchor-id="section-8"></h3>
 <p>3.6.4 Spatial window sum</p>
 <p>The spatial window sum is the counter part of the window average, but without using row-standardized weights. To do this we assign binary weights to the neighbor structure that includes the diagonal element.</p>
 <div class="cell">
@@ -1774,7 +1775,6 @@ B 88 7744 448 896 10224</code></pre>
 </div>
 
 
-</section>
 </section>
 </section>
 
