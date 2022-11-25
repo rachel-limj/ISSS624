@@ -1,5 +1,5 @@
 ---
-title: "In-class_Ex1"
+title: "In-class_Ex1 - Spatial Weights and Applications"
 editor: visual
 ---
 
@@ -23,7 +23,7 @@ Two data sets will be used in this hands-on exercise, they are:
 
 -   Hunan county boundary layer. This is a geospatial data set in ESRI shapefile format.
 
--   Hunan_2012.csv: This csv file contains selected Hunan\'s local development indicators in 2012.
+-   Hunan_2012.csv: This csv file contains selected Hunan's local development indicators in 2012.
 
 ### 3.1.1 Getting Started
 
@@ -62,7 +62,7 @@ hunan2012 <- read_csv("data/aspatial/Hunan_2012.csv")
 
 ### 3.1.5 Performing relational join
 
-The code chunk below will be used to update the attribute table of *hunan*\'s SpatialPolygonsDataFrame with the attribute fields of *hunan2012* dataframe. This is performed by using *left_join()* of **dplyr** package.
+The code chunk below will be used to update the attribute table of *hunan*'s SpatialPolygonsDataFrame with the attribute fields of *hunan2012* dataframe. This is performed by using *left_join()* of **dplyr** package.
 
 ```{r}
 hunan <- left_join(hunan,hunan2012)
@@ -85,7 +85,7 @@ tmap_arrange(basemap, gdppc, asp=1, ncol=2)
 
 In this section, I learnt how to use [*poly2nb()*](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package to **compute contiguity weight matrices** for the study area. This function builds a neighbours list based on regions with contiguous boundaries.
 
-Passing a \"queen\" argument that takes TRUE or FALSE as options. The argument by default is set to TRUE, and returns a list of first order neighbours using the Queen criteria.
+Passing a "queen" argument that takes TRUE or FALSE as options. The argument by default is set to TRUE, and returns a list of first order neighbours using the Queen criteria.
 
 ### 3.3.1 Computing (QUEEN) contiguity based neighbours
 
@@ -136,7 +136,7 @@ nb1 <- hunan$GDPPC[nb1]
 nb1
 ```
 
-The printed output above shows that the GDPPC of the five nearest neighbours based on Queen\'s method are 20981, 34592, 24473, 21311 and 22879 respectively.
+The printed output above shows that the GDPPC of the five nearest neighbours based on Queen's method are 20981, 34592, 24473, 21311 and 22879 respectively.
 
 You can display the complete weight matrix by using *str()*.
 
@@ -249,7 +249,7 @@ wm_d62 <- dnearneigh(coords, 0, 62, longlat = TRUE)
 wm_d62
 ```
 
-**Quiz:** What is the meaning of \"Average number of links: 3.681818\" shown above?
+**Quiz:** What is the meaning of "Average number of links: 3.681818" shown above?
 
 **Answer:** Average number of links refers to the average number of neighbouring points each point has based on the defined upper and lower limit boundaries. It's also the K.
 
@@ -275,7 +275,8 @@ table(n_comp$comp.id)
 ```
 
 #### 
-3.4.2.1 Plotting fixed distance weight matrix
+
+#### 3.4.2.1 Plotting fixed distance weight matrix
 
 Next, we will plot the distance weight matrix by using the code chunk below.
 
@@ -299,7 +300,8 @@ plot(wm_d62, coords, add=TRUE, pch = 19, cex = 0.6, main="Distance link")
 ```
 
 ### 
-3.4.3 Computing adaptive distance weight matrix
+
+### 3.4.3 Computing adaptive distance weight matrix
 
 One of the characteristics of fixed distance weight matrix is that more densely settled areas (usually the urban areas) tend to have more neighbours and the less densely settled areas (usually the rural counties) tend to have lesser neighbours. Having many neighbours smoothes the neighbour relationship across more neighbours.
 
@@ -318,8 +320,7 @@ str(knn6)
 
 Notice that each county has six neighbours, no less no more!
 
-#### 
-3.4.3.1 Plotting distance based neighbours
+#### 3.4.3.1 Plotting distance based neighbours
 
 We can plot the weight matrix using the code chunk below.
 
@@ -342,7 +343,7 @@ ids
 
 ### 3.5.1 Row-standardised weights matrix
 
-Next, we need to assign weights to each neighboring polygon. In our case, each neighboring polygon will be assigned equal weight (style=\"W\"). This is accomplished by assigning the **fraction 1/(#ofneighbors)** to each neighboring county then **summing the weighted income values**. While this is the most intuitive way to summaries the neighbors\' values it has one *drawback in that polygons along the edges of the study area will base their lagged values on fewer polygons thus potentially over- or under-estimating the true nature of the spatial autocorrelation in the data*. For this example, we\'ll stick with the style=\"W\" option for simplicity\'s sake but note that other more robust options are available, notably style=\"B\".
+Next, we need to assign weights to each neighboring polygon. In our case, each neighboring polygon will be assigned equal weight (style="W"). This is accomplished by assigning the **fraction 1/(#ofneighbors)** to each neighboring county then **summing the weighted income values**. While this is the most intuitive way to summaries the neighbors' values it has one *drawback in that polygons along the edges of the study area will base their lagged values on fewer polygons thus potentially over- or under-estimating the true nature of the spatial autocorrelation in the data*. For this example, we'll stick with the style="W" option for simplicity's sake but note that other more robust options are available, notably style="B".
 
 ```{r}
 rswm_q <- nb2listw(wm_q, style="W", zero.policy = TRUE)
@@ -351,13 +352,13 @@ rswm_q
 
 The **zero.policy=TRUE option** allows for lists of non-neighbors. This should be used with caution since the user may not be aware of missing neighbors in their dataset however, a zero.policy of FALSE would return an error.
 
-To see the weight of the first polygon\'s four neighbors type:
+To see the weight of the first polygon's four neighbors type:
 
 ```{r}
 rswm_q$weights[1]
 ```
 
-Each neighbor is assigned a 0.2 of the total weight. This means that when R computes the average neighboring income values, each neighbor\'s income will be multiplied by 0.2 before being tallied.
+Each neighbor is assigned a 0.2 of the total weight. This means that when R computes the average neighboring income values, each neighbor's income will be multiplied by 0.2 before being tallied.
 
 Using the same method, we can also derive a row standardised distance weight matrix by using the code chunk below.
 
@@ -386,7 +387,7 @@ In this section, you will learn how to create four different spatial lagged vari
 
 ### 3.6.1 Spatial lag with row-standardized weights
 
-Finally, we\'ll compute the [average neighbor GDPPC value]{.underline} for each polygon. These values are often referred to as **spatially lagged values**.
+Finally, we'll compute the [average neighbor GDPPC value]{.underline} for each polygon. These values are often referred to as **spatially lagged values**.
 
 ```{r}
 GDPPC.lag <- lag.listw(rswm_q, hunan$GDPPC)
@@ -436,7 +437,8 @@ tmap_arrange(gdppc, lag_gdppc, asp=1, ncol=2)
 ```
 
 ### 
-3.6.2 Spatial lag as a sum of neighboring values
+
+### 3.6.2 Spatial lag as a sum of neighboring values
 
 We can calculate spatial lag as a sum of neighboring values by **assigning binary weights**. This requires us to go back to our neighbors list, then apply a function that will assign binary weights, then we use **glist =** in the **nb2listw** function to explicitly assign these weights.
 
@@ -468,8 +470,7 @@ lag_sum
 
 **Answer:** Yes its the summation of neighbouring GDPPC Values of each county
 
-20981  + 34592 + 24473 + 21311  + 22879 = 124236
-
+20981 + 34592 + 24473 + 21311 + 22879 = 124236
 
 Next, we will append the *lag_sum GDPPC* field into `hunan` sf data frame by using the code chunk below.
 
@@ -486,7 +487,8 @@ tmap_arrange(gdppc, lag_sum_gdppc, asp=1, ncol=2)
 ```
 
 ### 
-3.6.3 Spatial window average
+
+### 3.6.3 Spatial window average
 
 The spatial window average uses **row-standardized weights** and **includes the diagonal element**. To do this in R, we need to go back to the neighbors structure and add the diagonal element before assigning weights. To begin we assign k6 to a new variable because we will directly alter its structure to add the diagonal elements.
 
@@ -539,7 +541,8 @@ tmap_arrange(gdppc, w_avg_gdppc, asp=1, ncol=2)
 Note: For more effective comparison, it is advisable to use the core tmap mapping functions.
 
 ### 
-3.6.4 Spatial window sum
+
+### 3.6.4 Spatial window sum
 
 The spatial window sum is the counter part of the window average, but without using row-standardized weights. To do this we assign binary weights to the neighbor structure that includes the diagonal element.
 

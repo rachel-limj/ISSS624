@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>ISSS624 - In-class_Ex1</title>
+<title>ISSS624 - In-class_Ex1 - Spatial Weights and Applications</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -151,7 +151,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <a class="dropdown-item" href="../Hands-on_Ex1/Hands-on_Ex1.html">
  <span class="dropdown-text">Hands-on Exercise 1</span></a>
   </li>  
-        <li class="dropdown-header">Hands-on Exercise 2</li>
+        <li>
+    <a class="dropdown-item" href="../Hands-on_Ex2/Hands-on_Ex2.html">
+ <span class="dropdown-text">Hands-on Exercise 2</span></a>
+  </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
@@ -211,6 +214,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#determine-the-cut-off-distance" id="toc-determine-the-cut-off-distance" class="nav-link" data-scroll-target="#determine-the-cut-off-distance">3.4.1 Determine the cut-off distance</a></li>
   <li><a href="#computing-fixed-distance-weight-matrix" id="toc-computing-fixed-distance-weight-matrix" class="nav-link" data-scroll-target="#computing-fixed-distance-weight-matrix">3.4.2 Computing fixed distance weight matrix</a></li>
   <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1"></a></li>
+  <li><a href="#computing-adaptive-distance-weight-matrix" id="toc-computing-adaptive-distance-weight-matrix" class="nav-link" data-scroll-target="#computing-adaptive-distance-weight-matrix">3.4.3 Computing adaptive distance weight matrix</a></li>
   </ul></li>
   <li><a href="#weights-based-on-idw" id="toc-weights-based-on-idw" class="nav-link" data-scroll-target="#weights-based-on-idw">3.5 Weights based on IDW</a>
   <ul class="collapse">
@@ -219,9 +223,12 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <li><a href="#application-of-spatial-weight-matrix" id="toc-application-of-spatial-weight-matrix" class="nav-link" data-scroll-target="#application-of-spatial-weight-matrix">3.6 Application of Spatial Weight Matrix</a>
   <ul class="collapse">
   <li><a href="#spatial-lag-with-row-standardized-weights" id="toc-spatial-lag-with-row-standardized-weights" class="nav-link" data-scroll-target="#spatial-lag-with-row-standardized-weights">3.6.1 Spatial lag with row-standardized weights</a></li>
+  <li><a href="#section-2" id="toc-section-2" class="nav-link" data-scroll-target="#section-2"></a></li>
+  <li><a href="#spatial-lag-as-a-sum-of-neighboring-values" id="toc-spatial-lag-as-a-sum-of-neighboring-values" class="nav-link" data-scroll-target="#spatial-lag-as-a-sum-of-neighboring-values">3.6.2 Spatial lag as a sum of neighboring values</a></li>
   <li><a href="#section-3" id="toc-section-3" class="nav-link" data-scroll-target="#section-3"></a></li>
+  <li><a href="#spatial-window-average" id="toc-spatial-window-average" class="nav-link" data-scroll-target="#spatial-window-average">3.6.3 Spatial window average</a></li>
   <li><a href="#section-4" id="toc-section-4" class="nav-link" data-scroll-target="#section-4"></a></li>
-  <li><a href="#section-5" id="toc-section-5" class="nav-link" data-scroll-target="#section-5"></a></li>
+  <li><a href="#spatial-window-sum" id="toc-spatial-window-sum" class="nav-link" data-scroll-target="#spatial-window-sum">3.6.4 Spatial window sum</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -231,7 +238,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">In-class_Ex1</h1>
+<h1 class="title">In-class_Ex1 - Spatial Weights and Applications</h1>
 </div>
 
 
@@ -262,7 +269,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Two data sets will be used in this hands-on exercise, they are:</p>
 <ul>
 <li><p>Hunan county boundary layer. This is a geospatial data set in ESRI shapefile format.</p></li>
-<li><p>Hunan_2012.csv: This csv file contains selected Hunan's local development indicators in 2012.</p></li>
+<li><p>Hunan_2012.csv: This csv file contains selected Hunan’s local development indicators in 2012.</p></li>
 </ul>
 <section id="getting-started" class="level3">
 <h3 class="anchored" data-anchor-id="getting-started">3.1.1 Getting Started</h3>
@@ -314,7 +321,7 @@ dbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...
 </section>
 <section id="performing-relational-join" class="level3">
 <h3 class="anchored" data-anchor-id="performing-relational-join">3.1.5 Performing relational join</h3>
-<p>The code chunk below will be used to update the attribute table of <em>hunan</em>'s SpatialPolygonsDataFrame with the attribute fields of <em>hunan2012</em> dataframe. This is performed by using <em>left_join()</em> of <strong>dplyr</strong> package.</p>
+<p>The code chunk below will be used to update the attribute table of <em>hunan</em>’s SpatialPolygonsDataFrame with the attribute fields of <em>hunan2012</em> dataframe. This is performed by using <em>left_join()</em> of <strong>dplyr</strong> package.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>hunan <span class="ot">&lt;-</span> <span class="fu">left_join</span>(hunan,hunan2012)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -341,7 +348,7 @@ dbl (27): avg_wage, deposite, FAI, Gov_Rev, Gov_Exp, GDP, GDPPC, GIO, Loan, ...
 <section id="computing-contiguity-spatial-weights" class="level2">
 <h2 class="anchored" data-anchor-id="computing-contiguity-spatial-weights">3.3 Computing Contiguity Spatial Weights</h2>
 <p>In this section, I learnt how to use <a href="https://r-spatial.github.io/spdep/reference/poly2nb.html"><em>poly2nb()</em></a> of <strong>spdep</strong> package to <strong>compute contiguity weight matrices</strong> for the study area. This function builds a neighbours list based on regions with contiguous boundaries.</p>
-<p>Passing a "queen" argument that takes TRUE or FALSE as options. The argument by default is set to TRUE, and returns a list of first order neighbours using the Queen criteria.</p>
+<p>Passing a “queen” argument that takes TRUE or FALSE as options. The argument by default is set to TRUE, and returns a list of first order neighbours using the Queen criteria.</p>
 <section id="computing-queen-contiguity-based-neighbours" class="level3">
 <h3 class="anchored" data-anchor-id="computing-queen-contiguity-based-neighbours">3.3.1 Computing (QUEEN) contiguity based neighbours</h3>
 <p>The code chunk below is used to compute Queen contiguity weight matrix.</p>
@@ -403,7 +410,7 @@ Link number distribution:
 <pre><code>[1] 20981 34592 24473 21311 22879</code></pre>
 </div>
 </div>
-<p>The printed output above shows that the GDPPC of the five nearest neighbours based on Queen's method are 20981, 34592, 24473, 21311 and 22879 respectively.</p>
+<p>The printed output above shows that the GDPPC of the five nearest neighbours based on Queen’s method are 20981, 34592, 24473, 21311 and 22879 respectively.</p>
 <p>You can display the complete weight matrix by using <em>str()</em>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(wm_q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -636,7 +643,7 @@ Percentage nonzero weights: 4.183884
 Average number of links: 3.681818 </code></pre>
 </div>
 </div>
-<p><strong>Quiz:</strong> What is the meaning of "Average number of links: 3.681818" shown above?</p>
+<p><strong>Quiz:</strong> What is the meaning of “Average number of links: 3.681818” shown above?</p>
 <p><strong>Answer:</strong> Average number of links refers to the average number of neighbouring points each point has based on the defined upper and lower limit boundaries. It’s also the K.</p>
 <p>Next, we will use <em>str()</em> to display the content of wm_d62 weight matrix.</p>
 <div class="cell">
@@ -853,7 +860,9 @@ Average number of links: 3.681818 </code></pre>
 </div>
 <section id="section" class="level4">
 <h4 class="anchored" data-anchor-id="section"></h4>
-<p>3.4.2.1 Plotting fixed distance weight matrix</p>
+</section>
+<section id="plotting-fixed-distance-weight-matrix" class="level4">
+<h4 class="anchored" data-anchor-id="plotting-fixed-distance-weight-matrix">3.4.2.1 Plotting fixed distance weight matrix</h4>
 <p>Next, we will plot the distance weight matrix by using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(hunan<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
@@ -879,7 +888,9 @@ Average number of links: 3.681818 </code></pre>
 </section>
 <section id="section-1" class="level3">
 <h3 class="anchored" data-anchor-id="section-1"></h3>
-<p>3.4.3 Computing adaptive distance weight matrix</p>
+</section>
+<section id="computing-adaptive-distance-weight-matrix" class="level3">
+<h3 class="anchored" data-anchor-id="computing-adaptive-distance-weight-matrix">3.4.3 Computing adaptive distance weight matrix</h3>
 <p>One of the characteristics of fixed distance weight matrix is that more densely settled areas (usually the urban areas) tend to have more neighbours and the less densely settled areas (usually the rural counties) tend to have lesser neighbours. Having many neighbours smoothes the neighbour relationship across more neighbours.</p>
 <p>It is possible to control the numbers of neighbours directly using k-nearest neighbours, either accepting asymmetric neighbours or imposing symmetry as shown in the code chunk below.</p>
 <div class="cell">
@@ -996,9 +1007,8 @@ Non-symmetric neighbours list</code></pre>
 </div>
 </div>
 <p>Notice that each county has six neighbours, no less no more!</p>
-<section id="section-2" class="level4">
-<h4 class="anchored" data-anchor-id="section-2"></h4>
-<p>3.4.3.1 Plotting distance based neighbours</p>
+<section id="plotting-distance-based-neighbours" class="level4">
+<h4 class="anchored" data-anchor-id="plotting-distance-based-neighbours">3.4.3.1 Plotting distance based neighbours</h4>
 <p>We can plot the weight matrix using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(hunan<span class="sc">$</span>geometry, <span class="at">border=</span><span class="st">"lightgrey"</span>)</span>
@@ -1294,7 +1304,7 @@ Non-symmetric neighbours list</code></pre>
 </div>
 <section id="row-standardised-weights-matrix" class="level3">
 <h3 class="anchored" data-anchor-id="row-standardised-weights-matrix">3.5.1 Row-standardised weights matrix</h3>
-<p>Next, we need to assign weights to each neighboring polygon. In our case, each neighboring polygon will be assigned equal weight (style="W"). This is accomplished by assigning the <strong>fraction 1/(#ofneighbors)</strong> to each neighboring county then <strong>summing the weighted income values</strong>. While this is the most intuitive way to summaries the neighbors' values it has one <em>drawback in that polygons along the edges of the study area will base their lagged values on fewer polygons thus potentially over- or under-estimating the true nature of the spatial autocorrelation in the data</em>. For this example, we'll stick with the style="W" option for simplicity's sake but note that other more robust options are available, notably style="B".</p>
+<p>Next, we need to assign weights to each neighboring polygon. In our case, each neighboring polygon will be assigned equal weight (style=“W”). This is accomplished by assigning the <strong>fraction 1/(#ofneighbors)</strong> to each neighboring county then <strong>summing the weighted income values</strong>. While this is the most intuitive way to summaries the neighbors’ values it has one <em>drawback in that polygons along the edges of the study area will base their lagged values on fewer polygons thus potentially over- or under-estimating the true nature of the spatial autocorrelation in the data</em>. For this example, we’ll stick with the style=“W” option for simplicity’s sake but note that other more robust options are available, notably style=“B”.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>rswm_q <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">style=</span><span class="st">"W"</span>, <span class="at">zero.policy =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>rswm_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1313,7 +1323,7 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 </div>
 </div>
 <p>The <strong>zero.policy=TRUE option</strong> allows for lists of non-neighbors. This should be used with caution since the user may not be aware of missing neighbors in their dataset however, a zero.policy of FALSE would return an error.</p>
-<p>To see the weight of the first polygon's four neighbors type:</p>
+<p>To see the weight of the first polygon’s four neighbors type:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a>rswm_q<span class="sc">$</span>weights[<span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -1321,7 +1331,7 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 [1] 0.2 0.2 0.2 0.2 0.2</code></pre>
 </div>
 </div>
-<p>Each neighbor is assigned a 0.2 of the total weight. This means that when R computes the average neighboring income values, each neighbor's income will be multiplied by 0.2 before being tallied.</p>
+<p>Each neighbor is assigned a 0.2 of the total weight. This means that when R computes the average neighboring income values, each neighbor’s income will be multiplied by 0.2 before being tallied.</p>
 <p>Using the same method, we can also derive a row standardised distance weight matrix by using the code chunk below.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>rswm_ids <span class="ot">&lt;-</span> <span class="fu">nb2listw</span>(wm_q, <span class="at">glist=</span>ids, <span class="at">style=</span><span class="st">"B"</span>, <span class="at">zero.policy=</span><span class="cn">TRUE</span>)</span>
@@ -1366,7 +1376,7 @@ B 88 7744 8.786867 0.3776535 3.8137</code></pre>
 </ul>
 <section id="spatial-lag-with-row-standardized-weights" class="level3">
 <h3 class="anchored" data-anchor-id="spatial-lag-with-row-standardized-weights">3.6.1 Spatial lag with row-standardized weights</h3>
-<p>Finally, we'll compute the <u>average neighbor GDPPC value</u> for each polygon. These values are often referred to as <strong>spatially lagged values</strong>.</p>
+<p>Finally, we’ll compute the <u>average neighbor GDPPC value</u> for each polygon. These values are often referred to as <strong>spatially lagged values</strong>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>GDPPC.lag <span class="ot">&lt;-</span> <span class="fu">lag.listw</span>(rswm_q, hunan<span class="sc">$</span>GDPPC)</span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>GDPPC.lag</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1481,9 +1491,11 @@ Geodetic CRS:  WGS 84
 </div>
 </div>
 </section>
-<section id="section-3" class="level3">
-<h3 class="anchored" data-anchor-id="section-3"></h3>
-<p>3.6.2 Spatial lag as a sum of neighboring values</p>
+<section id="section-2" class="level3">
+<h3 class="anchored" data-anchor-id="section-2"></h3>
+</section>
+<section id="spatial-lag-as-a-sum-of-neighboring-values" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-lag-as-a-sum-of-neighboring-values">3.6.2 Spatial lag as a sum of neighboring values</h3>
 <p>We can calculate spatial lag as a sum of neighboring values by <strong>assigning binary weights</strong>. This requires us to go back to our neighbors list, then apply a function that will assign binary weights, then we use <strong>glist =</strong> in the <strong>nb2listw</strong> function to explicitly assign these weights.</p>
 <p>We start by applying a function that will assign a value of 1 per each neighbor. This is done with <strong>lapply</strong>, which we have been using to manipulate the neighbors structure throughout the past notebooks. Basically it applies a function across each value in the neighbors structure.</p>
 <div class="cell">
@@ -1572,9 +1584,11 @@ B 88 7744 448 896 10224</code></pre>
 </div>
 </div>
 </section>
-<section id="section-4" class="level3">
-<h3 class="anchored" data-anchor-id="section-4"></h3>
-<p>3.6.3 Spatial window average</p>
+<section id="section-3" class="level3">
+<h3 class="anchored" data-anchor-id="section-3"></h3>
+</section>
+<section id="spatial-window-average" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-window-average">3.6.3 Spatial window average</h3>
 <p>The spatial window average uses <strong>row-standardized weights</strong> and <strong>includes the diagonal element</strong>. To do this in R, we need to go back to the neighbors structure and add the diagonal element before assigning weights. To begin we assign k6 to a new variable because we will directly alter its structure to add the diagonal elements.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>wm_q1 <span class="ot">&lt;-</span> wm_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1650,9 +1664,11 @@ W 88 7744 88 37.86334 365.9147</code></pre>
 </div>
 <p>Note: For more effective comparison, it is advisable to use the core tmap mapping functions.</p>
 </section>
-<section id="section-5" class="level3">
-<h3 class="anchored" data-anchor-id="section-5"></h3>
-<p>3.6.4 Spatial window sum</p>
+<section id="section-4" class="level3">
+<h3 class="anchored" data-anchor-id="section-4"></h3>
+</section>
+<section id="spatial-window-sum" class="level3">
+<h3 class="anchored" data-anchor-id="spatial-window-sum">3.6.4 Spatial window sum</h3>
 <p>The spatial window sum is the counter part of the window average, but without using row-standardized weights. To do this we assign binary weights to the neighbor structure that includes the diagonal element.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>wm_q1 <span class="ot">&lt;-</span> wm_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>

@@ -3,7 +3,7 @@ title: "Hands-on Exercise 1: Geospatial Data Wrangling and Chloropleth mapping w
 editor: visual
 ---
 
-## Overview
+## 1. Overview
 
 In this hands-on exercise, I learnt how to import and wrangle geospatial data with appropriate R packages
 
@@ -103,7 +103,7 @@ plot(mpsz["PLN_AREA_N"])
 
 ## 
 
-1.5 Working with Projection
+## 1.5 Working with Projection
 
 ### 1.5.1 Assigning EPSG code to a simple feature data frame
 
