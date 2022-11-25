@@ -1,7 +1,9 @@
 ---
-title: "ISSS624"
+title: "ISSS624 - Geospatial Analytics Applications"
 ---
 
 Welcome to ISSS624 Geo-spatial Analytics Applications!
 
-In this webpage, I am going to share with you my learning journey of geospatial
+In this webpage, I am going to share with you my learning journey of geospatial analytical techniques and applications.
+
+![](https://www.esri.com/about/newsroom/wp-content/uploads/2019/10/arcnews-banner-thegeospatialindustry-wide.jpg)
