@@ -328,8 +328,7 @@ plot(hunan$geometry, border="lightgrey")
 plot(knn6, coords, pch = 19, cex = 0.6, add = TRUE, col = "red")
 ```
 
-## 
-3.5 Weights based on IDW
+## 3.5 Weights based on IDW
 
 In this section, you will learn how to derive a spatial weight matrix based on Inversed Distance method.
 
@@ -375,8 +374,7 @@ rswm_ids$weights[1]
 summary(unlist(rswm_ids$weights))
 ```
 
-## 
-3.6 Application of Spatial Weight Matrix
+## 3.6 Application of Spatial Weight Matrix
 
 In this section, you will learn how to create four different spatial lagged variables, they are:
 
@@ -386,8 +384,7 @@ In this section, you will learn how to create four different spatial lagged vari
 
 -   spatial window average, and spatial window sum.
 
-### 
-3.6.1 Spatial lag with row-standardized weights
+### 3.6.1 Spatial lag with row-standardized weights
 
 Finally, we\'ll compute the [average neighbor GDPPC value]{.underline} for each polygon. These values are often referred to as **spatially lagged values**.
 
