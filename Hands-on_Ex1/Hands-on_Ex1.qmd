@@ -397,6 +397,10 @@ tm_shape(mpsz_pop2020)+
 
 #### 2.3.3.1 Plotting choropleth maps with built-in classification methods
 
+By default "Pretty" Data classification method is used.
+
+[Using Quantile Data Classification that used 5 classes (n=5):]{.underline}
+
 ```{r}
 tm_shape(mpsz_pop2020)+
   tm_fill("DEPENDENCY",
@@ -404,6 +408,8 @@ tm_shape(mpsz_pop2020)+
           style = "jenks") +
   tm_borders(alpha = 0.5)
 ```
+
+[Using Equal Data Classification that used 5 classes (n=5):]{.underline}
 
 ```{r}
 tm_shape(mpsz_pop2020)+
@@ -413,7 +419,109 @@ tm_shape(mpsz_pop2020)+
   tm_borders(alpha = 0.5)
 ```
 
-#### 2.3.3.2 Plotting choropleth map with custome break
+**Part 1 - DIY compare Chloropeth maps using different data classification methods**
+
+[DIY - Using SD Data Classification that used 5 classes (n=5):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "sd") +
+  tm_borders(alpha = 0.5)
+```
+
+[DIY - Using kmeans Data Classification that used 5 classes (n=5):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "kmeans") +
+  tm_borders(alpha = 0.5)
+```
+
+[DIY - Using hclust Data Classification that used 5 classes (n=5):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "hclust") +
+  tm_borders(alpha = 0.5)
+```
+
+[DIY - Using bclust Data Classification that used 5 classes (n=5):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "bclust") +
+  tm_borders(alpha = 0.5)
+```
+
+[DIY - Using fisher Data Classification that used 5 classes (n=5):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "fisher") +
+  tm_borders(alpha = 0.5)
+```
+
+Observation:
+
+Different data classification method yielded different outcomes despite keeping number of classes constant. The legend showing values of grouping changes with data classification method used.
+
+**Part 2 - DIY compare Chloropeth maps using same data classification methods but different no. of classes**
+
+[DIY - Using Quantile Data Classification that used 2 classes (n=2):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 2,
+          style = "jenks") +
+  tm_borders(alpha = 0.5)
+```
+
+[DIY - Using Quantile Data Classification that used 6 classes (n=6):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 6,
+          style = "jenks") +
+  tm_borders(alpha = 0.5)
+```
+
+[DIY - Using Quantile Data Classification that used 10 classes (n=10):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 10,
+          style = "jenks") +
+  tm_borders(alpha = 0.5)
+```
+
+[DIY - Using Quantile Data Classification that used 20 classes (n=20):]{.underline}
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          n = 20,
+          style = "jenks") +
+  tm_borders(alpha = 0.5)
+```
+
+Observation:
+
+The same data classification method with different number of classes showed differences in colour gradients by geographical area. More number of classes showed more differences by geographical areas. n = 6 and n= 10 gave good differentiation results. However, when n = 20, it becomes less easy to interpret.
+
+#### 2.3.3.2 Plotting choropleth map with custom break
 
 ```{r}
 summary(mpsz_pop2020$DEPENDENCY)
@@ -451,7 +559,11 @@ tm_shape(mpsz_pop2020)+
   tm_borders(alpha = 0.5)
 ```
 
+The "-" in front of "Greens" was used to reverse the colour scheme.
+
 ### 2.3.5 Map Layouts
+
+Map layout refers to the combination of all map elements into a cohesive map.
 
 #### 2.3.5.1 Map Legend
 
@@ -523,7 +635,7 @@ tmap_style("white")
 
 In **tmap**, small multiple maps can be plotted in three ways:
 
--   by assigning multiple values to at least one of the asthetic arguments,
+-   by assigning multiple values to at least one of the aesthetic arguments,
 
 -   by defining a group-by variable in *tm_facets()*, and
 
