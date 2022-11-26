@@ -145,7 +145,7 @@ wm_q <- poly2nb(hunan,
 summary(wm_q)
 ```
 
-The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one heighbours.
+The summary report above shows that there are 88 area units in Hunan. The most connected area unit has 11 neighbours. There are two area units with only one neighbours.
 
 ### 
 
@@ -193,7 +193,9 @@ moran.test(hunan$GDPPC,
            na.action=na.omit)
 ```
 
-**Question:** What statistical conclusion can you draw from the output above? **Answer:** Moran's *I* is a measure of the overall clustering of the spatial data to assess if the data has global spatial autocorrelation. The Null hypothesis states that there is no spatial autocorrelation. P-value is less than 0.05, there is enough statistical evidence to reject Null hypothesis.
+**Question:** What statistical conclusion can you draw from the output above?
+
+**Answer:** Moran's *I* is a measure of the overall clustering of the spatial data to assess if the data has global spatial autocorrelation. The Null hypothesis states that there is no spatial autocorrelation. P-value is less than 0.05, there is enough statistical evidence to reject Null hypothesis.
 
 #### 
 
@@ -244,7 +246,9 @@ abline(v=0,
        col="red") 
 ```
 
-**Question:** What statistical observation can you draw from the output above? **Answer:** The Simulated Moran's I statistic of 0.30075 falls way to the right of the distribution suggesting that the GDPPC values have spatial autocorrelation and are not randomly distributed.
+**Question:** What statistical observation can you draw from the output above?
+
+**Answer:** The Simulated Moran's I statistic of 0.30075 falls way to the right of the distribution suggesting that the GDPPC values have spatial autocorrelation and are not randomly distributed.
 
 **Challenge:** Instead of using Base Graph to plot the values, plot the values by using ggplot2 package.
 
@@ -286,7 +290,7 @@ geary.test(hunan$GDPPC, listw=rswm_q)
 
 **Answer:**
 
-Geary's *C* is a measure of spatial [autocorrelation](https://en.wikipedia.org/wiki/Autocorrelation "Autocorrelation") or an attempt to determine if adjacent observations of the same phenomenon are correlated. The value of Geary's *C* lies between 0 and some unspecified value greater than 1. Values significantly lower than 1 demonstrate increasing positive spatial autocorrelation, whilst values significantly higher than 1 illustrate increasing negative spatial autocorrelation.
+Geary's *C* is a measure of spatial [autocorrelation](https://en.wikipedia.org/wiki/Autocorrelation "Autocorrelation") or an attempt to determine if adjacent observations of the same phenomenon are correlated. The value of Geary's *C* lies between 0 and 3. Values significantly lower than 1 demonstrate increasing positive spatial autocorrelation, whilst values significantly higher than 1 illustrate increasing negative spatial autocorrelation.
 
 Geary's *C* is inversely related to [Moran's *I*](https://en.wikipedia.org/wiki/Moran%27s_I "Moran's I"), but it is not identical.
 
@@ -360,7 +364,9 @@ By plotting the output might not allow us to provide complete interpretation. Th
 print(MI_corr)
 ```
 
-**Question:** What statistical observation can you draw from the plot above? **Answer:**
+**Question:** What statistical observation can you draw from the plot above?
+
+**Answer:**
 
 The correlogram is a commonly used tool for to check randomness in a dataset. If random, autocorrelations should be near zero for any and all time-lag separations. If non-random, then one or more of the autocorrelations will be significantly non-zero.
 
@@ -438,7 +444,7 @@ hunan.localMI <- cbind(hunan,localMI) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
 ```
 
-4.5.2.1 Mapping local Moran's I values
+#### 4.5.1.2 Mapping local Moran's I values
 
 Using choropleth mapping functions of **tmap** package, we can plot the local Moran's I values by using the code chinks below.
 
@@ -453,7 +459,7 @@ tm_shape(hunan.localMI) +
 
 ```
 
-#### 4.5.1.2 Mapping local Moran's I p-values
+#### 4.5.1.3 Mapping local Moran's I p-values
 
 The choropleth shows there is evidence for both positive and negative Ii values. However, it is useful to consider the p-values for each of these values, as consider above.
 
@@ -470,7 +476,7 @@ tm_shape(hunan.localMI) +
 
 #### 
 
-#### 4.5.1.3 Mapping both local Moran's I values and p-values
+#### 4.5.1.4 Mapping both local Moran's I values and p-values
 
 For effective interpretation, it is better to plot both the local Moran's I values map and its corresponding p-values map next to each other.
 
@@ -636,13 +642,13 @@ tmap_arrange(gdppc, LISAmap, asp=1, ncol=2)
 
 **Answer:**
 
-Many counties have insignificant results. The ones that are statistically signficant from LISA map are as follows:
+Many counties have insignificant results. The ones that are statistically significant from LISA map are as follows:
 
--   Wangcheng, Liuyang, shaoshan, changsha, Ningxiang and Lengshujiang counties have [high GDPPC]{.underline} and [high local spatial correlation]{.underline}
+-   Wangcheng, Liuyang, Shaoshan, Changsha, Ningxiang counties are clusters which have [high GDPPC]{.underline} and positive autocorrelation, their surrounding counties have relatively high GDPPC.
 
--   Zixing county have [high GDPPC]{.underline} and [low local spatial autocorrelation]{.underline}
+-   Zixing and Lengshujiang counties are outliers which have [high GDPPC]{.underline} and negative autocorrelation, their surrounding counties have relatively low GDPPC.
 
--   Zhuzhou and Xiangtan counties have [low GDPPC]{.underline} and [high local spatial autocorrelation]{.underline}
+-   Zhuzhou and Xiangtan counties are outliers which have [low GDPPC]{.underline} and positive autocorrelation, their surrounding counties have relatively high GDPPC.
 
 ## 4.7 Hot Spot and Cold Spot Area Analysis
 
@@ -840,4 +846,4 @@ tmap_arrange(gdppc,
 
 **Question:** What statistical observation can you draw from the Gi map above?
 
-**Answer:** Counties in red are "hot spots" with GDPPC statistically higher than surrounding areas and average while the blue shaded counties are the "cold spots" with GDPPC statistically lower than the surrounding areas. The colour code is derived from adaptive distance weights
+**Answer:** Counties in red are "hot spots" with GDPPC statistically higher than surrounding areas and average while the blue shaded counties are the "cold spots" with GDPPC statistically lower than the surrounding areas. The colour code is derived from adaptive distance weights.
