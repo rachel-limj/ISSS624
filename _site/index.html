@@ -60,7 +60,7 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body class="nav-fixed">
@@ -173,7 +173,27 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#the-periodic-table-for-spatial-analysis" id="toc-the-periodic-table-for-spatial-analysis" class="nav-link active" data-scroll-target="#the-periodic-table-for-spatial-analysis"><strong>The Periodic Table for Spatial Analysis</strong></a></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a>
+  <ul class="collapse">
+  <li><a href="#vector-analysisconversion" id="toc-vector-analysisconversion" class="nav-link" data-scroll-target="#vector-analysisconversion"><strong>Vector Analysis/Conversion</strong></a></li>
+  <li><a href="#tables" id="toc-tables" class="nav-link" data-scroll-target="#tables"><strong>Tables</strong></a></li>
+  <li><a href="#editingcartography" id="toc-editingcartography" class="nav-link" data-scroll-target="#editingcartography"><strong>Editing/Cartography</strong></a></li>
+  <li><a href="#d-analysis" id="toc-d-analysis" class="nav-link" data-scroll-target="#d-analysis"><strong>3D Analysis</strong></a></li>
+  <li><a href="#network-analysis" id="toc-network-analysis" class="nav-link" data-scroll-target="#network-analysis"><strong>Network Analysis</strong></a></li>
+  <li><a href="#data-management" id="toc-data-management" class="nav-link" data-scroll-target="#data-management"><strong>Data Management</strong></a></li>
+  <li><a href="#emerging-technology" id="toc-emerging-technology" class="nav-link" data-scroll-target="#emerging-technology"><strong>Emerging Technology</strong></a></li>
+  <li><a href="#raster-data-management" id="toc-raster-data-management" class="nav-link" data-scroll-target="#raster-data-management"><strong>Raster Data Management</strong></a></li>
+  <li><a href="#raster-analysis" id="toc-raster-analysis" class="nav-link" data-scroll-target="#raster-analysis"><strong>Raster Analysis</strong></a></li>
+  <li><a href="#remote-sensing" id="toc-remote-sensing" class="nav-link" data-scroll-target="#remote-sensing"><strong>Remote Sensing</strong></a></li>
+  <li><a href="#interpolation" id="toc-interpolation" class="nav-link" data-scroll-target="#interpolation"><strong>Interpolation</strong></a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -196,10 +216,145 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 <p>Welcome to ISSS624 Geo-spatial Analytics Applications!</p>
-<p>In this webpage, I am going to share with you my learning journey of geospatial analytical techniques and applications.</p>
+<p>In this webpage, I am going to share with you my learning journey of Geospatial Analytical techniques and applications.</p>
 <p><img src="https://www.esri.com/about/newsroom/wp-content/uploads/2019/10/arcnews-banner-thegeospatialindustry-wide.jpg" class="img-fluid"></p>
+<section id="the-periodic-table-for-spatial-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="the-periodic-table-for-spatial-analysis"><strong>The Periodic Table for Spatial Analysis</strong></h2>
+<p>By:<a href="https://gisgeography.com/author/gisgeo/">GISGeography</a></p>
+<p><img src="https://gisgeography.com/wp-content/uploads/2021/05/Spatial-Analysis-Periodic-Table-1265x751.png" class="img-fluid"></p>
+</section>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section"></h2>
+<p><strong>Introducing: The Periodic Table for Spatial Analysis</strong></p>
+<p>Spatial analysis may seem like <strong>alchemy</strong> to the inexperienced. But there is a <strong>science</strong> to it. By using spatial analysis, we can find patterns, quantify area, and predict outcomes with <strong>geography</strong> being the common link of it all.</p>
+<p>Each element in the Periodic Table for Spatial Analysis contains a set of spatial analysis tools. We've grouped common tools by color with vector analysis tools on the left and raster analysis on the right.</p>
+<section id="vector-analysisconversion" class="level3">
+<h3 class="anchored" data-anchor-id="vector-analysisconversion"><strong>Vector Analysis/Conversion</strong></h3>
+<p><strong>1. Vector Conversion [VC]</strong> – Converts file formats for points, lines, and polygons and alters data models from vector to raster or vice versa. (Feature to raster, <a href="https://gisgeography.com/rasterization-vectorization/"><strong>rasterization vs vectorization</strong></a>)<br>
+<strong>2. Extract [EX]</strong> – Creates a subset of features by clipping, selecting, and splitting vector features. (<a href="https://gisgeography.com/clip-tool-gis/"><strong>Clip</strong></a>, select, and split)<br>
+<strong>3. Overlay [OV]</strong> – Overlays 2 or more vector layers and outputs layers based on overlapping features. (<a href="https://gisgeography.com/intersect-tool-gis/"><strong>Intersect</strong></a>, <a href="https://gisgeography.com/union-tool/"><strong>union</strong></a>, <a href="https://gisgeography.com/erase-tool-gis/"><strong>erase tool</strong></a>)<br>
+<strong>4. Proximity [PX]</strong> – Generates output based on distances or proximity functions. (<a href="https://gisgeography.com/buffer-tool-gis/"><strong>Buffer</strong></a>, <a href="https://gisgeography.com/voronoi-diagram-thiessen-polygons/"><strong>Voronoi diagrams</strong></a>, and near functions)<br>
+<strong>5. Spatial Join [SJ]</strong> – Joins attributes from a separate layer based on distance or spatial relationship. (1-M <a href="https://gisgeography.com/spatial-join/"><strong>Spatial join</strong></a> "Contains", 1-1 Touches)<br>
+<strong>6. Plot Diagrams [PD]</strong> – Builds a graph or diagram based on a set of attributes and geographical locations. (Scatter plot, histograms, bar plots)<br>
+<strong>7. Geometry Shape [GS]</strong> – Computes the geometric shape of an object. (Compactness, perimeter/area ratio, rectangular fit).</p>
+</section>
+<section id="tables" class="level3">
+<h3 class="anchored" data-anchor-id="tables"><strong>Tables</strong></h3>
+<p><strong>8. Table Tools [TB]</strong> – Performs table functions for storing attribute data (Add field, create domains, <a href="https://gisgeography.com/how-to-permanently-reorder-fields-in-arcgis/"><strong>reorder fields</strong></a>)<br>
+<strong>9. Add XY Coordinates [XY]</strong> – Converts a table of XY coordinates (latitude/longitude) into a layer with a defined coordinate system. (<a href="https://gisgeography.com/adding-excel-lat-long-coordinates-arcgis/"><strong>Add lat/long coordinates</strong></a>)<br>
+<strong>10. Calculate Geometry [CG]</strong> – Computes the length of the geometric measurements in the attribute table of vector features. (Calculate length/area)<br>
+<strong>11. Join Table [JT]</strong> – Appends the attribute columns from one table into another table based on matching record keys. (1:1, 1:M, M:N)<br>
+<strong>12. Relate [RL]</strong> – Generates a temporary table that displays matching records that associate with one or more matching records. (<a href="https://gisgeography.com/relate-vs-join-attribute-tables-arcgis/"><strong>Relate vs Join</strong></a>)<br>
+<strong>13. Statistics [ST]</strong> – Calculates statistics based on a numerical field in a table. (<a href="https://gisgeography.com/root-mean-square-error-rmse-gis/"><strong>RMSE</strong></a>, <a href="https://gisgeography.com/mean-absolute-error-mae-gis/"><strong>MAE</strong></a>, sum, mean, count, standard deviation).</p>
+</section>
+<section id="editingcartography" class="level3">
+<h3 class="anchored" data-anchor-id="editingcartography"><strong>Editing/Cartography</strong></h3>
+<p><strong>14. Editing [ED]</strong> – Performs an editing function using the vertices and geometry in one or more layers. (<a href="https://gisgeography.com/gis-editing-tools/"><strong>Editing tools</strong></a>, densify, trim, snap, and extend)<br>
+<strong>15. Conflation [CF]</strong> – Resolves conflicts between two layers that display the same features with mismatching geometries. (Edge-matching, rubber sheeting, <a href="https://gisgeography.com/conflation-edgematching-rubbersheeting/"><strong>conflation</strong></a>)<br>
+<strong>16. Grid Index [GI]</strong> – Produces a set of consecutive rectangular map sheets that follow a linear feature for mapbook production. (Strip Map, fishnet, tessellation, <a href="https://gisgeography.com/how-to-create-qgis-atlas-mapbooks/"><strong>QGIS Atlas</strong></a>, <a href="https://gisgeography.com/data-driven-pages-mapbooks-arcgis/"><strong>data driven pages</strong></a>)<br>
+<strong>17. Cartographic [CA]</strong> – Enhances or generalizes features in a dataset for cartographic display and aesthetic quality. (Smooth, simplify, aggregate).</p>
+</section>
+<section id="d-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="d-analysis"><strong>3D Analysis</strong></h3>
+<p><strong>18. 3D Analysis [3D]</strong> – Performs an overlay or proximity analysis with 3D features. (<a href="https://gisgeography.com/3d-analysis/"><strong>3D analysis</strong></a> buffer, intersect, or union)<br>
+<strong>19. Line of Sight Visibility [LS]</strong> – Identifies obstruction and non-obstruction sections of a straight line from an observer. (<a href="https://gisgeography.com/line-of-sight-viewshed-visibility-analysis/"><strong>Line of sight</strong></a>)<br>
+<strong>20. Volume [VS]</strong> – Calculates the amount of space above, below, within, or for the purpose of removing or adding material. (Cut/fill)<br>
+<strong>21. Viewshed [VW]</strong> – Determines locations visible to an observer in all directions with the output as a visibility raster.<br>
+<strong>22. Skyline [SL]</strong> – Displays visible and obstructed shadowed areas similar to a 3D fan pointing from an observer's point of view.<br>
+<strong>23. Space-time Cubes [SC]</strong> – Builds temporal and 3D cubes representing slices of time in a geographic area. (<a href="https://gisgeography.com/space-time-cubes/"><strong>Space-time cubes</strong></a>)</p>
+</section>
+<section id="network-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="network-analysis"><strong>Network Analysis</strong></h3>
+<p><strong>24. Route [RT]</strong> – Finds the optimal route using a set of points and a network dataset. (<a href="https://gisgeography.com/network-analysis/"><strong>Network analysis</strong></a> fastest route, find nearest, or shortest distance)<br>
+<strong>25. Directions [DR]</strong> – Lists the turns, streets, and directions from an origin to a destination point using a network dataset.<br>
+<strong>26. Optimal Site [OS]</strong> – Selects optimal sites from existing facilities, competing stores, and available demand. (<a href="https://gisgeography.com/optimal-business-location-allocation/"><strong>Location-allocation</strong></a>)<br>
+<strong>27. Coverage [CV]</strong> – Computes the coverage or accessibility that a facility can be reached for a given distance, time, and network dataset. (Service area)<br>
+<strong>28. OD Cost Matrix [CM]</strong> – Measures the least cost path from multiple origin points to multiple destination points.<br>
+<strong>29. Huff Model [HM]</strong> – Predicts the probability that consumers will patron retail stores using store size, distance, and census tract population. (<a href="https://gisgeography.com/huff-gravity-model/"><strong>Huff gravity model</strong></a>)</p>
+</section>
+<section id="data-management" class="level3">
+<h3 class="anchored" data-anchor-id="data-management"><strong>Data Management</strong></h3>
+<p><strong>30. Data Management [DM]</strong> – Manages layers with a set of tools to develop, alter, and maintain layers (<a href="https://gisgeography.com/merge-tool-gis/"><strong>Merge</strong></a>, <a href="https://gisgeography.com/append-tool-gis/"><strong>append</strong></a>, data compare)<br>
+<strong>31. Projections [PJ]</strong> – Assigns a coordinate reference system for a layer. (<a href="https://gisgeography.com/arcgis-projections-define-project/"><strong>Project</strong></a>, define projection)<br>
+<strong>32. Generalize Vector [GV]</strong> – Combines adjacent features or slivers based on common attribute values or shared borders. (<a href="https://gisgeography.com/dissolve-tool-gis/"><strong>Dissolve</strong></a> and eliminate)<br>
+<strong>33. Address Geocoding [AD]</strong> – Translates addresses into geographic locations with latitude and longitude coordinates. (<a href="https://gisgeography.com/geocoding/"><strong>Geocode</strong></a>, reverse geocode)<br>
+<strong>34. Topology [TP]</strong> – Fixes and catches editing errors such as overshoots, undershoots, slivers, overlaps, and gaps. (<a href="https://gisgeography.com/topology-rules-arcgis/"><strong>Topology rules</strong></a>)<br>
+<strong>35. Linear Referencing [LR]</strong> – Stores relative positions on a line feature represented by m-values for point/line events. (<a href="https://gisgeography.com/linear-referencing-systems/"><strong>Linear referencing systems</strong></a>)<br>
+<strong>36. Spatial Adjustment [SA]</strong> – Aligns and transforms a vector layer that has been displaced, rotated, or distorted like georeferencing for vectors. (Vector bender, displacement links)<br>
+<strong>37. GeoEnrich [GE]</strong> – Ameliorates existing data with value-added information such as demographic, education, or income attributes. (<a href="https://gisgeography.com/geoenrichment/"><strong>GeoEnrichment</strong></a>)<br>
+<strong>38. Sampling [SP]</strong> – Creates a subset of data for sampling at set intervals or randomly. (Regular points, random points in extent)<br>
+<strong>39. Geotagging [GT]</strong> – Assigns geographic coordinates to digital photos through GPS without georeferencing. (<a href="https://gisgeography.com/geotagging/"><strong>Geotagging</strong></a>)<br>
+<strong>40. Parcel Fabric [PF]</strong> – Constructs cadastral specific to managing parcel fabric. (Cadastral divisions, split polygon)<br>
+<strong>41. Attachments [AT]</strong> – Builds attachments to store photos internally as a table relationship.<br>
+<strong>42. Full Motion Video [FMV]</strong> – Geo-enables video with the footprints coordinated on a map. (<a href="https://gisgeography.com/full-motion-video-fmv/"><strong>Full motion video</strong></a>)<br>
+<strong>43. COGO [CO]</strong> – Captures coordinates, bearings, and distances from transverse land survey measurements. (<a href="https://gisgeography.com/cogo-coordinate-geometry/"><strong>COGO – Coordinate Geometry</strong></a>)<br>
+<strong>44. Point Cloud [PC]</strong> – Manages LAS files with a set of tools to maintain, alter, and interpolate point clouds.<br>
+<strong>45. Web Service [WS]</strong> – Deploys or imports features from a layer as a web feature/mapping service. (Web feature service, GeoRSS)<br>
+<strong>46. TIN [TIN]</strong> – Creates a triangular irregular network for depicting three-dimensional terrain surfaces. (TIN mesh creation)<br>
+<strong>47. Indoor Mapping [IM]</strong> – Incorporates indoor floor plans with digital formats like BIM, Revit, and CAD. (<a href="https://gisgeography.com/indoor-mapping/"><strong>Indoor mapping</strong></a>)<br>
+<strong>48. Temporal [TM]</strong> – Adds time properties to layers with the date and/or time (Convert time zone, update time field, <a href="https://gisgeography.com/time-series-animation-arcgis/"><strong>temporal animation</strong></a>)<br>
+<strong>49. Real-time Tracking [TR]</strong> – Streams real-time movement of objects or change in status over time. (GeoEvent server, <a href="https://gisgeography.com/geofence-geofencing/"><strong>geofencing</strong></a>, make tracking layer)</p>
+</section>
+<section id="emerging-technology" class="level3">
+<h3 class="anchored" data-anchor-id="emerging-technology"><strong>Emerging Technology</strong></h3>
+<p><strong>50. Big Data [BD]</strong> – Analyzes and extracts data from datasets too large and complex with geographic locations. (GeoAnalytics Desktop Tools)<br>
+<strong>51. Machine Learning [ML]</strong> – Uses neural networks for classification, prediction, and segmentation through training and labeling. (Deep learning toolset, <a href="https://gisgeography.com/deep-machine-learning-ml-artificial-intelligence-ai-gis/"><strong>machine learning</strong></a>)<br>
+<strong>52. Data Engineering [DE]</strong> – Validates, cleans, and maintains spatial data into a usable form for analysis.<br>
+<strong>53. IoT [IOT]</strong> – Analyzes real-time data feeds and sensors from the Internet of Things (IoT) platform. (<a href="https://gisgeography.com/arcgis-velocity/"><strong>ArcGIS Velocity</strong></a>)<br>
+<strong>54. Agent-based Simulation and Modeling [AS]</strong> – Simulate scenarios and the emergence of phenomena through individual interactions in geographic space. (Multi-agent modeling environment)<br>
+<strong>55. Virtual Reality [VR]</strong> – Replaces the field of vision through headsets in a spatial environment.<br>
+<strong>56. Augmented Reality [AR]</strong> – Enhances 3D features on your phone's display to interact spatially with the outside world. (<a href="https://gisgeography.com/augmented-reality-applications-gis/"><strong>Augmented reality</strong></a>)</p>
+<p><strong>Complete courses from anywhere:</strong></p>
+</section>
+<section id="raster-data-management" class="level3">
+<h3 class="anchored" data-anchor-id="raster-data-management"><strong>Raster Data Management</strong></h3>
+<p><strong>57. Georeferencing [GR]</strong> – Stretches, scales, rotates, and skews raster images to better relate to geographic space. (<a href="https://gisgeography.com/georeferencing/"><strong>Georeferencing</strong></a>)<br>
+<strong>58. Mosaic [MO]</strong> – Combines multiple raster images into a seamless, composite raster image. (<a href="https://gisgeography.com/mosaic-raster/"><strong>Mosaic</strong></a>)<br>
+<strong>59. Raster Creation [RC]</strong> – Generates a raster for a given extent at a specific cell size. (Create a random raster, create a constant raster)<br>
+<strong>60. Spatial Autocorrelation [AL]</strong> – Measures how dispersed or clustered cells are located in a raster. (<a href="https://gisgeography.com/spatial-autocorrelation-moran-i-gis/"><strong>Moran's I</strong></a>)<br>
+<strong>61. Generalization [RG]</strong> – Cleans raster data by generalizing, smoothing, and altering cells. (Nibble, shrink, expand)<br>
+<strong>62. Multidimensional [MD]</strong> – Provides an interface for array-oriented data for storing multidimensional variables. (NetCDF)<br>
+<strong>63. Resample [RS]</strong> – Updates the cell size for converting raster images. (<a href="https://gisgeography.com/raster-resampling/"><strong>Raster resample</strong></a>: Nearest neighbor, bilinear, and cubic convolution)<br>
+<strong>64. Raster Painting [PA]</strong> – Draws and erases raster cells with a set of brush, fill, and erase tools.</p>
+</section>
+<section id="raster-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="raster-analysis"><strong>Raster Analysis</strong></h3>
+<p><strong>65. Raster Analysis [RA]</strong> – Performs raster analysis functions for a raster grid dataset. (Analyze patterns)<br>
+<strong>66. Map Algebra [MA]</strong> – Applies math-like operations in local, zonal, focal, and global configurations. (<a href="https://gisgeography.com/map-algebra-global-zonal-focal-local/"><strong>Map algebra</strong></a>)<br>
+<strong>67. Contours [CN]</strong> – Produces lines of constant elevation to represent the topography of the landscape. (<a href="https://gisgeography.com/contour-lines-topographic-map/"><strong>Contours</strong></a>)<br>
+<strong>68. Zonal Statistics [ZS]</strong> – Generates statistics for defined zones of a raster surface. (<a href="https://gisgeography.com/zonal-statistics/"><strong>Zonal statistics</strong></a> – mean, sum, and majority)<br>
+<strong>69. Cost Path [CP]</strong> – Finds the most cost-effective path, from a start point to a destination, which accumulates the least amount of cost. (<a href="https://gisgeography.com/least-cost-path-analysis/"><strong>Least cost path</strong></a>)<br>
+<strong>70. Raster Processing [RP]</strong> – Creates a subset of features by clipping, selecting, and splitting raster grids. (<a href="https://gisgeography.com/clip-rasters-arcgis-polygon-boundary/"><strong>Raster clip</strong></a>, split raster)<br>
+<strong>71. Spatial Regression [RE]</strong> – Generates a prediction surface based on explanatory variables. (Ordinary least squares regression, <a href="https://gisgeography.com/spatial-regression-models-arcgis/"><strong>spatial regression</strong></a>)<br>
+<strong>72. Terrain Analysis [TA]</strong> – Calculates the characteristics of the terrain from an input raster. (<a href="https://gisgeography.com/flow-direction/"><strong>Slope</strong></a>, morphometry, TPI, and roughness)<br>
+<strong>73. Math Function [MF]</strong> – Executes a math function to update the numerical value on a cell-by-cell basis. (Arithmetic, power, exponential, and logarithmic)<br>
+<strong>74. Suitability [SU]</strong> – Overlays raster surfaces based on criteria to analyze suitability. (Fuzzy logic weighted sum)<br>
+<strong>75. Conditional [CON]</strong> – Performs a conditional statement on a raster that generates a binary output. (Greater than, equal to)</p>
+</section>
+<section id="remote-sensing" class="level3">
+<h3 class="anchored" data-anchor-id="remote-sensing"><strong>Remote Sensing</strong></h3>
+<p><strong>76. Band Index [BA]</strong> – Converts a set of imagery bands by leveraging the inherent wavelength properties. (<a href="https://gisgeography.com/ndvi-normalized-difference-vegetation-index/"><strong>NDVI</strong></a>, tasseled cap, wetness index)<br>
+<strong>77. Image Stretching [IS]</strong> – Arranges the display of an image by adjusting brightness, contrast, and gamma properties.<br>
+<strong>78. Image Classification [IC]</strong> – Assigns land cover classes to imagery pixels based on their spectral properties. (<a href="https://gisgeography.com/supervised-unsupervised-classification-arcgis/"><strong>Supervised/unsupervised classification</strong></a>)<br>
+<strong>79. Composite Bands [CB]</strong> – Combines single-band rasters into a composite raster for true color or false color display. (<a href="https://gisgeography.com/arcgis-composite-bands/"><strong>Composite bands</strong></a>)<br>
+<strong>80. Pansharpening [PS]</strong> – Enhances the spatial cell resolution by leveraging the panchromatic band.<br>
+<strong>81. Atmosphere Correction [AC]</strong> – Corrects remote sensing imagery through scattering inherent in the atmosphere. (Dark object subtraction, radiative transfer models, <a href="https://gisgeography.com/atmospheric-window/"><strong>atmosphere correction</strong></a>)<br>
+<strong>82. Segmentation [SG]</strong> – Grouping similar pixels from an image into vector objects to recognize objects and features. (Segment mean shift, <a href="https://gisgeography.com/obia-object-based-image-analysis-geobia/"><strong>object-based image analysis</strong></a>)<br>
+<strong>83. Data Mining [DN]</strong> – Eliminates redundant data from variables that are highly correlated, aggregating essential information. (<a href="https://gisgeography.com/principal-component-analysis-gis-redundant-data/"><strong>Principal component analysis</strong></a>)<br>
+<strong>84. Mensuration [ME]</strong> – Measures the geometry of two and three-dimensional features in an image. (Angles, height, perimeter, volume)<br>
+<strong>85. Photogrammetry [PH]</strong> – Performs stereographic parallax from two or more vantage points of the same object to measure relief displacement. (<a href="https://gisgeography.com/what-is-photogrammetry/"><strong>Photogrammetry</strong></a>)<br>
+<strong>86. Oblique [OB]</strong> – Collects images at an angle as opposed to a top-down orthographic perspective.<br>
+<strong>87. Radar [RD]</strong> – Measures the backscatter of a sent microwave pulses to Earth whether it's specular, diffuse, or double-bounce reflection. (<a href="https://gisgeography.com/synthetic-aperture-radar-examples/"><strong>Synthetic aperture radar</strong></a>)</p>
+</section>
+<section id="interpolation" class="level3">
+<h3 class="anchored" data-anchor-id="interpolation"><strong>Interpolation</strong></h3>
+<p><strong>88. Interpolation [IP]</strong> – Estimates unknown values using sampled locations by creating a prediction surface. (<a href="https://gisgeography.com/inverse-distance-weighting-idw-interpolation/"><strong>IDW</strong></a>, spline, trend)<br>
+<strong>89. Kriging [KR]</strong> – Generates a probability and prediction surface by building a mathematical function through a semi-variogram. (<a href="https://gisgeography.com/kriging-interpolation-prediction/"><strong>Kriging</strong></a> and <a href="https://gisgeography.com/semi-variogram-nugget-range-sill/"><strong>semi-variograms</strong></a>, and <a href="https://gisgeography.com/geostatistics/"><strong>geostatistics</strong></a>)<br>
+<strong>90. Kernel Density [KD]</strong> – Calculates hot and cold spots by applying a density-per-unit function (Heat map)</p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
