@@ -50,8 +50,8 @@ format:
   html:
     theme: 
       light: flatly
-      dark: darkly
-    css: styles.css
+      dark: [flatly, theme-dark.scss]
+    css: custom.css
     toc: true
 
 editor: visual
