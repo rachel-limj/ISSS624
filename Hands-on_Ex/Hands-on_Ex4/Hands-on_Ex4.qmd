@@ -7,6 +7,12 @@ editor: visual
 
 Geographically weighted regression (GWR) is a spatial statistical technique that takes non-stationary variables into consideration (e.g., climate; demographic factors; physical environment characteristics) and models the local relationships between these independent variables and an outcome of interest (also known as dependent variable). In this hands-on exercise, you will learn how to build hedonic pricing models by using GWR methods. The dependent variable is the resale prices of condominium in 2015. The independent variables are divided into either structural and locational.
 
+### What is Hedonic Pricing?
+
+The most common example of the hedonic pricing method is in the real estate market, wherein the price of a building or piece of land is determined by the characteristics of both the property itself (i.e. internal factors like its size, appearance, features like solar panels or state-of-the-art faucet fixtures, and condition), as well as characteristics of its surrounding environment (i.e. external factors such as if the neighborhood has a high crime rate and/or is accessible to schools and a downtown area, the level of water and air pollution, or the value of other homes close by).
+
+The hedonic pricing model is used to estimate the extent to which each factor affects the market price of the property. When running this type of model, if non-environmental factors are controlled for (held steady), any remaining discrepancies in price will represent differences in the good\'s external surroundings. With regards to valuing properties, a hedonic pricing model is relatively straightforward as relies on actual market prices and comprehensive, available data sets.
+
 ## 6.1 The Data
 
 Two data sets will be used in this model building exercise, they are:
@@ -15,9 +21,7 @@ Two data sets will be used in this model building exercise, they are:
 
 -   condo_resale_2015 in csv format (i.e. condo_resale_2015.csv)
 
-## 
-
-6.2 Getting Started
+### 6.1.1 Getting Started
 
 Before we get started, it is important for us to install the necessary R packages into R and launch these R packages into R environment.
 
@@ -57,7 +61,7 @@ for (p in packages){
 
 ## 
 
-6.2 Geospatial Data Wrangling
+## 6.2 Geospatial Data Wrangling
 
 ### 6.2.1 Importing geospatial data
 
