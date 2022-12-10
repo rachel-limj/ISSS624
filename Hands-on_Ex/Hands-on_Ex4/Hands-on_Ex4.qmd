@@ -11,7 +11,7 @@ Geographically weighted regression (GWR) is a spatial statistical technique that
 
 The most common example of the hedonic pricing method is in the real estate market, wherein the price of a building or piece of land is determined by the characteristics of both the property itself (i.e. internal factors like its size, appearance, features like solar panels or state-of-the-art faucet fixtures, and condition), as well as characteristics of its surrounding environment (i.e. external factors such as if the neighborhood has a high crime rate and/or is accessible to schools and a downtown area, the level of water and air pollution, or the value of other homes close by).
 
-The hedonic pricing model is used to estimate the extent to which each factor affects the market price of the property. When running this type of model, if non-environmental factors are controlled for (held steady), any remaining discrepancies in price will represent differences in the good\'s external surroundings. With regards to valuing properties, a hedonic pricing model is relatively straightforward as relies on actual market prices and comprehensive, available data sets.
+The hedonic pricing model is used to estimate the extent to which each factor affects the market price of the property. When running this type of model, if non-environmental factors are controlled for (held steady), any remaining discrepancies in price will represent differences in the good's external surroundings. With regards to valuing properties, a hedonic pricing model is relatively straightforward as relies on actual market prices and comprehensive, available data sets.
 
 ## 6.1 The Data
 
@@ -21,15 +21,31 @@ Two data sets will be used in this model building exercise, they are:
 
 -   condo_resale_2015 in csv format (i.e. condo_resale_2015.csv)
 
-### 6.1.1 Getting Started
+### 6.1.1 Getting Started - R Packages
 
 Before we get started, it is important for us to install the necessary R packages into R and launch these R packages into R environment.
 
 The R packages needed for this exercise are as follows:
 
--   **olsrr** - R package for building OLS and performing diagnostics tests
+-   **olsrr** - R package for building OLS and performing diagnostics tests:
 
--   **GWmodel** - R package for calibrating geographical weighted family of models. Thispackage provides a collection of **localised spatial statistical methods**, namely:
+    -   Comprehensive Regression Output
+
+    -   Variable Selection Procedures
+
+    -   Heteroskedasticity Tests
+
+    -   Col-linearity Diagnostics
+
+    -   Model Fit Assessment
+
+    -   Measures of Influence
+
+    -   Residual Diagnostics
+
+    -   Variable Contribution Assessment
+
+-   **GWmodel** - R package for calibrating geographical weighted family of models. This package provides a collection of **localised spatial statistical methods**, namely:
 
     -   GW summary statistics
 
@@ -37,29 +53,23 @@ The R packages needed for this exercise are as follows:
 
     -   GW discriminant analysis and various forms of GW regression; some of which are provided in basic and robust (outlier resistant) forms.
 
-        Commonly, outputs or parameters of the GWmodel are mapped to provide a useful exploratory tool, which can often precede (and direct) a more traditional or sophisticated statistical analysis.
+    -   Can build predictive model as well not just descriptive models
 
--   **corrplot** -R package for multivariate data visualisation and analysis
+    -   Commonly, outputs or parameters of the GWmodel are mapped to provide a useful exploratory tool, which can often precede (and direct) a more traditional or sophisticated statistical analysis.
+
+-   **corrplot** -R package for multivariate data visualization and analysis
 
 -   **sf** -Spatial data handling
 
--   **tidyverse** (**readr**, **ggplot2** and **dplyr**)- Attribute data handling
+-   **tidyverse** (**readr**, **ggplot2** and **dplyr**) - Attribute data handling
 
 -   **tmap** - Choropleth mapping
 
 The code chunks below installs and launches these R packages into R environment.
 
 ```{r}
-packages = c('olsrr', 'corrplot', 'ggpubr', 'sf', 'spdep', 'GWmodel', 'tmap', 'tidyverse','terra')
-for (p in packages){
-  if(!require(p, character.only = T)){
-    install.packages(p)
-  }
-  library(p,character.only = T)
-}
+pacman::p_load(olsrr, corrplot, ggpubr, sf, spdep, GWmodel, tmap, tidyverse, gtsummary)
 ```
-
-## 
 
 ## 6.2 Geospatial Data Wrangling
 
@@ -75,9 +85,7 @@ mpsz = st_read(dsn = "data/geospatial", layer = "MP14_SUBZONE_WEB_PL")
 
 The report above shows that the R object used to contain the imported MP14_SUBZONE_WEB_PL shapefile is called *mpsz* and it is a simple feature object. The geometry type is *multipolygon*. it is also important to note that mpsz simple feature object does not have EPSG information.
 
-### 
-
-6.2.2 Updating CRS information
+### 6.2.2 Updating CRS information
 
 The code chunk below updates the newly imported *mpsz* with the correct ESPG code (i.e. 3414)
 
@@ -167,7 +175,13 @@ condo_resale.sf <- st_as_sf(condo_resale,
 head(condo_resale.sf)
 ```
 
+```{r}
+head(condo_resale.sf)
+```
+
 ## 6.4 Exploratory Data Analysis
+
+In the section, you will learn how to use statistical graphics functions of **ggplot2** package to perform EDA.
 
 ### 6.4.1 EDA using statistical graphics
 
@@ -267,7 +281,7 @@ tm_shape(condo_resale.sf) +
 
 Notice that ***tm_dots()*** is used instead of ***tm_bubbles()***.
 
-*set.zoom.limits* argument of ***tm_view()*** sets the minimum and maximum zoom level to 11 and 14 respectively.
+***set.zoom.limits*** argument of ***tm_view()*** sets the minimum and maximum zoom level to 11 and 14 respectively.
 
 Before moving on to the next section, the code below will be used to turn R display into **plot** mode.
 
@@ -344,6 +358,8 @@ condo.mlr <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE    + PROX_CBD + PROX_CH
 summary(condo.mlr)
 ```
 
+### 6.6.4 Preparing Publication Quality Table: gtsummary method
+
 With reference to the report above, it is clear that not all the independent variables are statistically significant. We will revised the model by removing those variables which are not statistically significant.
 
 Now, we are ready to calibrate the revised model by using the code chunk below.
@@ -353,7 +369,35 @@ condo.mlr1 <- lm(formula = SELLING_PRICE ~ AREA_SQM + AGE   + PROX_CBD + PROX_CH
 ols_regress(condo.mlr1)
 ```
 
-#### 6.6.3.1 Checking for multicolinearity
+### 
+
+6.6.5 Preparing Publication Quality Table: gtsummary method
+
+The [**gtsummary**](https://www.danieldsjoberg.com/gtsummary/) package provides an elegant and flexible way to create publication-ready summary tables in R.
+
+In the code chunk below, [`tbl_regression()`](https://www.danieldsjoberg.com/gtsummary/reference/tbl_regression.html) is used to create a well formatted regression report.
+
+```{r}
+tbl_regression(condo.mlr1, intercept = TRUE)
+```
+
+With gtsummary package, model statistics can be included in the report by either appending them to the report table by using [`add_glance_table()`](https://www.danieldsjoberg.com/gtsummary/reference/add_glance.html) or adding as a table source note by using [`add_glance_source_note()`](https://www.danieldsjoberg.com/gtsummary/reference/add_glance.html) as shown in the code chunk below.
+
+```{r}
+tbl_regression(condo.mlr1, 
+               intercept = TRUE) %>% 
+  add_glance_source_note(
+    label = list(sigma ~ "\U03C3"),
+    include = c(r.squared, adj.r.squared, 
+                AIC, statistic,
+                p.value, sigma))
+```
+
+For more customisation options, refer to [Tutorial: tbl_regression](https://www.danieldsjoberg.com/gtsummary/articles/tbl_regression.html)
+
+### 
+
+6.6.5.1 Checking for multicolinearity
 
 In this section, we would like to introduce you a fantastic R package specially programmed for performing OLS regression. It is called [**olsrr**](https://olsrr.rsquaredacademy.com/). It provides a collection of very useful methods for building better multiple linear regression models:
 
@@ -381,7 +425,7 @@ ols_vif_tol(condo.mlr1)
 
 Since the VIF of the independent variables are less than 10. We can safely conclude that there are no sign of multicollinearity among the independent variables.
 
-#### 6.6.3.2 Test for Non-Linearity
+#### 6.6.5.2 Test for Non-Linearity
 
 In multiple linear regression, it is important for us to test the assumption that linearity and additivity of the relationship between dependent and independent variables.
 
@@ -411,7 +455,7 @@ ols_test_normality(condo.mlr1)
 
 The summary table above reveals that the p-values of the four tests are way smaller than the alpha value of 0.05. Hence we will reject the null hypothesis that the residual is NOT resemble normal distribution.
 
-#### 6.6.3.4 Testing for Spatial Autocorrelation
+#### 6.6.5.4 Testing for Spatial Autocorrelation
 
 The hedonic model we try to build are using geographically referenced attributes, hence it is also important for us to visual the residual of the hedonic pricing model.
 
@@ -505,15 +549,17 @@ In this section, you are going to learn how to modelling hedonic pricing using b
 
 In the code chunk below *bw.gwr()* of GWModel package is used to determine the optimal fixed bandwidth to use in the model. Notice that the argument ***adaptive*** is set to **FALSE** indicates that we are interested to compute the fixed bandwidth.
 
-There are two possible approaches can be uused to determine the stopping rule, they are: CV cross-validation approach and AIC corrected (AICc) approach. We define the stopping rule using ***approach*** agreement.
+There are two possible approaches can be used to determine the stopping rule, they are: CV cross-validation approach and AIC corrected (AICc) approach. We define the stopping rule using ***approach*** agreement.
 
 ```{r}
 bw.fixed <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_BUS_STOP + NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, data=condo_resale.sp, approach="CV", kernel="gaussian", adaptive=FALSE, longlat=FALSE)
 ```
 
-The result shows that the recommended bandwidth is 971.3398 metres.
+The result shows that the recommended bandwidth is 971.3405 metres.
 
 #### **Quiz: Do you know why it is in metre?**
+
+Our projected system is in meters. Hence, the results are in meters.
 
 #### 6.7.1.2 GWModel method - fixed bandwith
 
@@ -529,7 +575,7 @@ The output is saved in a list of class "gwrm". The code below can be used to dis
 gwr.fixed
 ```
 
-The report shows that the adjusted r-square of the gwr is 0.8430 which is significantly better than the globel multiple linear regression model of 0.6472.
+The report shows that the AICc of the gwr is 42263.61 which is significantly smaller than the global multiple linear regression model of 42967.1.
 
 ### 6.7.2 Building Adaptive Bandwidth GWR Model
 
@@ -537,7 +583,7 @@ In this section, we will calibrate the gwr-absed hedonic pricing model by using 
 
 #### 6.7.2.1 Computing the adaptive bandwidth
 
-Similar to the earlier section, we will first use *bw.ger()* to determine the recommended data point to use.
+Similar to the earlier section, we will first use *bw.gwr()* to determine the recommended data point to use.
 
 The code chunk used look very similar to the one used to compute the fixed bandwidth except the ***adaptive*** argument has changed to **TRUE**.
 
@@ -562,7 +608,7 @@ The code below can be used to display the model output.
 gwr.adaptive
 ```
 
-The report shows that the adjusted r-square of the gwr is 0.8561 which is significantly better than the globel multiple linear regression model of 0.6472.
+The report shows that the AICc the adaptive distance gwr is 41982.22 which is even smaller than the AICc of the fixed distance gwr of 42263.61.
 
 ### 6.7.3 Visualising GWR Output
 

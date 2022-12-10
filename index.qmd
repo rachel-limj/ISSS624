@@ -12,14 +12,13 @@ In this webpage, I am going to share with you my learning journey of Geospatial 
 
 By:[GISGeography](https://gisgeography.com/author/gisgeo/)
 
-![](https://gisgeography.com/wp-content/uploads/2021/05/Spatial-Analysis-Periodic-Table-1265x751.png)
+## ![](images/paste-0576E557.png)
 
-## 
-**Introducing: The Periodic Table for Spatial Analysis**
+## **Introducing: The Periodic Table for Spatial Analysis**
 
 Spatial analysis may seem like **alchemy** to the inexperienced. But there is a **science** to it. By using spatial analysis, we can find patterns, quantify area, and predict outcomes with **geography** being the common link of it all.
 
-Each element in the Periodic Table for Spatial Analysis contains a set of spatial analysis tools. We\'ve grouped common tools by color with vector analysis tools on the left and raster analysis on the right.
+Each element in the Periodic Table for Spatial Analysis contains a set of spatial analysis tools. We've grouped common tools by color with vector analysis tools on the left and raster analysis on the right.
 
 ### **Vector Analysis/Conversion**
 
@@ -27,7 +26,7 @@ Each element in the Periodic Table for Spatial Analysis contains a set of spatia
 **2. Extract \[EX\]** -- Creates a subset of features by clipping, selecting, and splitting vector features. ([**Clip**](https://gisgeography.com/clip-tool-gis/), select, and split)\
 **3. Overlay \[OV\]** -- Overlays 2 or more vector layers and outputs layers based on overlapping features. ([**Intersect**](https://gisgeography.com/intersect-tool-gis/), [**union**](https://gisgeography.com/union-tool/), [**erase tool**](https://gisgeography.com/erase-tool-gis/))\
 **4. Proximity \[PX\]** -- Generates output based on distances or proximity functions. ([**Buffer**](https://gisgeography.com/buffer-tool-gis/), [**Voronoi diagrams**](https://gisgeography.com/voronoi-diagram-thiessen-polygons/), and near functions)\
-**5. Spatial Join \[SJ\]** -- Joins attributes from a separate layer based on distance or spatial relationship. (1-M [**Spatial join**](https://gisgeography.com/spatial-join/) \"Contains\", 1-1 Touches)\
+**5. Spatial Join \[SJ\]** -- Joins attributes from a separate layer based on distance or spatial relationship. (1-M [**Spatial join**](https://gisgeography.com/spatial-join/) "Contains", 1-1 Touches)\
 **6. Plot Diagrams \[PD\]** -- Builds a graph or diagram based on a set of attributes and geographical locations. (Scatter plot, histograms, bar plots)\
 **7. Geometry Shape \[GS\]** -- Computes the geometric shape of an object. (Compactness, perimeter/area ratio, rectangular fit).
 
@@ -53,7 +52,7 @@ Each element in the Periodic Table for Spatial Analysis contains a set of spatia
 **19. Line of Sight Visibility \[LS\]** -- Identifies obstruction and non-obstruction sections of a straight line from an observer. ([**Line of sight**](https://gisgeography.com/line-of-sight-viewshed-visibility-analysis/))\
 **20. Volume \[VS\]** -- Calculates the amount of space above, below, within, or for the purpose of removing or adding material. (Cut/fill)\
 **21. Viewshed \[VW\]** -- Determines locations visible to an observer in all directions with the output as a visibility raster.\
-**22. Skyline \[SL\]** -- Displays visible and obstructed shadowed areas similar to a 3D fan pointing from an observer\'s point of view.\
+**22. Skyline \[SL\]** -- Displays visible and obstructed shadowed areas similar to a 3D fan pointing from an observer's point of view.\
 **23. Space-time Cubes \[SC\]** -- Builds temporal and 3D cubes representing slices of time in a geographic area. ([**Space-time cubes**](https://gisgeography.com/space-time-cubes/))
 
 ### **Network Analysis**
@@ -96,7 +95,7 @@ Each element in the Periodic Table for Spatial Analysis contains a set of spatia
 **53. IoT \[IOT\]** -- Analyzes real-time data feeds and sensors from the Internet of Things (IoT) platform. ([**ArcGIS Velocity**](https://gisgeography.com/arcgis-velocity/))\
 **54. Agent-based Simulation and Modeling \[AS\]** -- Simulate scenarios and the emergence of phenomena through individual interactions in geographic space. (Multi-agent modeling environment)\
 **55. Virtual Reality \[VR\]** -- Replaces the field of vision through headsets in a spatial environment.\
-**56. Augmented Reality \[AR\]** -- Enhances 3D features on your phone\'s display to interact spatially with the outside world. ([**Augmented reality**](https://gisgeography.com/augmented-reality-applications-gis/))
+**56. Augmented Reality \[AR\]** -- Enhances 3D features on your phone's display to interact spatially with the outside world. ([**Augmented reality**](https://gisgeography.com/augmented-reality-applications-gis/))
 
 **Complete courses from anywhere:**
 
@@ -105,7 +104,7 @@ Each element in the Periodic Table for Spatial Analysis contains a set of spatia
 **57. Georeferencing \[GR\]** -- Stretches, scales, rotates, and skews raster images to better relate to geographic space. ([**Georeferencing**](https://gisgeography.com/georeferencing/))\
 **58. Mosaic \[MO\]** -- Combines multiple raster images into a seamless, composite raster image. ([**Mosaic**](https://gisgeography.com/mosaic-raster/))\
 **59. Raster Creation \[RC\]** -- Generates a raster for a given extent at a specific cell size. (Create a random raster, create a constant raster)\
-**60. Spatial Autocorrelation \[AL\]** -- Measures how dispersed or clustered cells are located in a raster. ([**Moran\'s I**](https://gisgeography.com/spatial-autocorrelation-moran-i-gis/))\
+**60. Spatial Autocorrelation \[AL\]** -- Measures how dispersed or clustered cells are located in a raster. ([**Moran's I**](https://gisgeography.com/spatial-autocorrelation-moran-i-gis/))\
 **61. Generalization \[RG\]** -- Cleans raster data by generalizing, smoothing, and altering cells. (Nibble, shrink, expand)\
 **62. Multidimensional \[MD\]** -- Provides an interface for array-oriented data for storing multidimensional variables. (NetCDF)\
 **63. Resample \[RS\]** -- Updates the cell size for converting raster images. ([**Raster resample**](https://gisgeography.com/raster-resampling/): Nearest neighbor, bilinear, and cubic convolution)\
@@ -138,7 +137,7 @@ Each element in the Periodic Table for Spatial Analysis contains a set of spatia
 **84. Mensuration \[ME\]** -- Measures the geometry of two and three-dimensional features in an image. (Angles, height, perimeter, volume)\
 **85. Photogrammetry \[PH\]** -- Performs stereographic parallax from two or more vantage points of the same object to measure relief displacement. ([**Photogrammetry**](https://gisgeography.com/what-is-photogrammetry/))\
 **86. Oblique \[OB\]** -- Collects images at an angle as opposed to a top-down orthographic perspective.\
-**87. Radar \[RD\]** -- Measures the backscatter of a sent microwave pulses to Earth whether it\'s specular, diffuse, or double-bounce reflection. ([**Synthetic aperture radar**](https://gisgeography.com/synthetic-aperture-radar-examples/))
+**87. Radar \[RD\]** -- Measures the backscatter of a sent microwave pulses to Earth whether it's specular, diffuse, or double-bounce reflection. ([**Synthetic aperture radar**](https://gisgeography.com/synthetic-aperture-radar-examples/))
 
 ### **Interpolation**
 
