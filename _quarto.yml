@@ -48,10 +48,8 @@ website:
 
 format:
   html:
-    theme: 
-      light: flatly
-      dark: [flatly, theme-dark.scss]
-    css: custom.css
+    theme: pandoc
+    css: style.css
     toc: true
 
 editor: visual
