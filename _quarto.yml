@@ -48,7 +48,7 @@ website:
 
 format:
   html:
-    theme: darkly
+    theme: cyborg
     css: style.css
     toc: true
 
