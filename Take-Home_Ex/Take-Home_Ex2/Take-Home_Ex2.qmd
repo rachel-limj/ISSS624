@@ -2,3 +2,2596 @@
 title: "Take-Home Exercise 2 - Regionalisation of Multivariate Water Point Attributes with Non-spatially Constrained and Spatially Constrained Clustering Methods"
 editor: visual
 ---
+
+## Key Objective
+
+Regionalisation of Nigeria:
+
+1.  Conventional Clustering - Hierarchical Clustering
+
+2.  Spatially Constrained Clustering
+
+    -   SKATER
+
+    -   ClustGeo: Ward-Like Hierarchical
+
+    -   Spatially Constrained Hierarchical
+
+## Packages used
+
+The packages used for the analysis are:
+
+-   **sf** - for importing and handling geospatial data
+
+-   **tmap** - for creating thematic maps, such as Choropleth maps
+
+-   **spdep** - a collection of functions to create spatial weights matrix object
+
+-   **funModeling** - a collection of functions related to exploratory data analysis, data preparation, and model performance
+
+-   **factoextra** - Extract and visualize the output of multivariate data analyses.
+
+-   **NbClust** - To determine the optimal of Clusters in a dataset
+
+-   **patchwork** - Combine separate ggplots into the same plot
+
+-   **tidyverse** -a collection of packages for performing data science tasks
+
+-   The following tidyverse packages will be used:
+
+    -   **readr** for importing delimited text file
+
+    -   **tidyr** for manipulating and tidying data
+
+    -   **dplyr** for wrangling and transforming data
+
+    -   **ggplot2** for data visualisation
+
+-   **heatmaply** - Cluster heatmap based on plotly
+
+-   **ClustGeo** - Ward-like hierarchical clustering algorithm including spatial/geographical constraints
+
+-   **reshape2** - Flexibly restructure and aggregate data .
+
+-   **ggstatsplot** - An extension of ggplot2 package for creating graphics with details
+
+-   **rgdal** - Provides bindings to the 'Geospatial' Data Abstraction Library (GDAL) and access to PROJ library.
+
+-   **rgeoda** - For spatial data analysis based on libgeoda and GeoDa.
+
+-   **corrplot** - A graphical display of a correlation matrix, confidence interval.
+
+The code chunk to install and load the packages is shown below:
+
+```{r}
+pacman::p_load(rgdal, spdep, tmap, sf, ClustGeo, rgeoda, spdep,funModeling,
+               cluster, factoextra, NbClust, heatmaply, corrplot, psych,tidyverse,reshape2,hrbrthemes, GGally,  ggpubr, patchwork, ggthemes, knitr, imputeTS)
+```
+
+## Data Set
+
+The table below shows the two data-sets we will be using:
+
++-------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+-------------------------------+
+| Data File                           | Description                                                                                                                                            | Date Type / Format     | Data Source                   |
++=====================================+========================================================================================================================================================+========================+===============================+
+| **Geo_Export**                      | Water point data in [WPdx+ data set](https://data.waterpointdata.org/dataset/Water-Point-Data-Exchange-Plus-WPdx-/eqje-vguj/data)                      | Aspatial / csv         | WPdx Global Data Repositories |
++-------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+-------------------------------+
+| **nga_admbnda_adm2_osgof_20190417** | [Nigeria Level-2 Administrative Boundary](https://data.humdata.org/dataset/cod-ab-nga) (also known as Local Government Area) polygon features GIS data | Geospatial / Shapefile | Humanitarian Data Exchange    |
++-------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------+-------------------------------+
+
+### Importing Nigeria Water Point Data
+
+Using read_csv, we import the "geo_export" csv into R and save it in a simple feature data frame format. We also filtered the data-set for records related to Nigeria using `filter()` of dplyr package.
+
+```{r}
+
+#| eval: false
+wp0 <- read_csv("data/geospatial/geo_export.csv") %>%
+  filter(`#clean_country_name` == "Nigeria")
+```
+
+We use the `st_as_sf()` function to convert the dataframe to an `sf` object. We will have to input the column that specify the longitude and latitude, and lastly, the CRS projection of the coordinates. We will transform the coordinates from 4326 to 26391 projection using the st_transform() function. We used EPSG: 26391 as it is one of the Projected Coordinate Systems of Nigeria.
+
+```{r}
+
+#| eval: false
+wp <- st_as_sf(wp0, coords = c("#lat_deg", "#lon_deg"), crs=4326) %>%  st_transform(crs = 26391)
+
+st_crs(wp)
+```
+
+### Importing Nigeria LGA boundary data
+
+We then import the Nigeria LGA boundary data into R environment by using the code chunk below. Again, we use EPSG: 26391, the Projected Coordinate Systems of Nigeria.
+
+```{r}
+#| eval: false
+
+nga0 <- st_read(dsn = "data/geospatial",
+               layer = "nga_admbnda_adm2_osgof_20190417")
+```
+
+Based on the output message above, the assigned CRS is [WGS 84](https://epsg.io/4326), the 'World Geodetic System 1984' which is not appropriate. Therefore, we will transform the coordinates from 4326 to 26391 projection using the st_transform() function. We used EPSG: 26391 as it is one of the Projected Coordinate Systems of Nigeria.
+
+```{r}
+#| eval: false
+
+nga <- st_transform(nga0, crs = 26391)
+
+st_crs(nga)
+```
+
+## Data Wrangling
+
+### **Addressing Duplicate Values**
+
+Referencing our classmate, Jordan Ong's work [link](https://jordan-isss624-geospatial.netlify.app/posts/geo/geospatial_exercise/#visualising-of-distribution-using-ggplot), 12 duplicated values for ShapeName "ADM2_EN" were found.
+
+```{r}
+#| eval: false
+
+nga <- (nga[order(nga$ADM2_EN), ])
+
+nga <- nga %>%
+  mutate(ADM2_EN = tolower(ADM2_EN))
+
+duplicate_area <-nga$ADM2_EN[ nga$ADM2_EN %in% nga$ADM2_EN[duplicated(nga$ADM2_EN)] ]
+
+duplicate_area
+```
+
+Jordan has identified the right location for these duplicate values with the help of Google map data.
+
+| Index | Actual Area Name |
+|-------|------------------|
+| 94    | Bassa (Kogi)     |
+| 95    | Bassa (Plateau)  |
+| 304   | Ifelodun (Kwara) |
+| 305   | Ifelodun (Osun)  |
+| 355   | Irepodun (Kwara) |
+| 356   | Irepodun (Osun)  |
+| 518   | Nassarawa        |
+| 546   | Obi (Benue)      |
+| 547   | Obi(Nasarawa)    |
+| 693   | Surulere (lagos) |
+| 694   | Surulere (Oyo)   |
+
+We will now access the individual index of the nga data frame and change the value. Lastly, we use the `length()` function to ensure there is no more duplicated shapeName (ADM2_EN)
+
+```{r}
+#| eval: false
+
+nga$ADM2_EN[c(94,95,304,305,355,356,519,546,547,693,694)] <- c("bassa kogi","bassa plateau",
+                                                                               "ifelodun kwara","ifelodun osun",
+                                                                               "irepodun kwara","irepodun osun",
+                                                                               "nassarawa","obi benue","obi nasarawa",
+                                                                               "surulere lagos","surulere oyo")
+
+length((nga$ADM2_EN[ nga$ADM2_EN %in% nga$ADM2_EN[duplicated(nga$ADM2_EN)] ]))
+```
+
+### Join Geospatial data and Aspatial data
+
+We will also use the `st_join()` function from the **sf** package to retrieve the *shapeName* (ADM2_EN) using *polygon* geometry from the geospatial data based on the *point* geometry from the Aspatial file.
+
+```{r}
+#| eval: false
+
+wp_nga <- st_join(wp,nga)
+```
+
+### **Renaming the column names**
+
+Next we will rename as our the variables that we will be using for clustering analysis. We will rename them to remove the "\#" from the variable names.
+
+```{r}
+#| eval: false
+
+wp_nga <- wp %>% 
+  rename ("water_tech" = "#water_tech_category") %>%
+  rename ("status_clean" = "#status_clean") %>%
+  rename ("status_id" = "#status_id") %>%
+  rename("management" = "#management_clean") 
+```
+
+### **Replace NA with "Unknown" or "0"**
+
+For variables of interest, we will also replace NA values for categorical variables with "Unknown" and continuous variables with "0" using the code chunk below:
+
+```{r}
+#| eval: false
+
+wp_nga <- wp_nga  %>%
+  mutate(water_tech = replace_na(water_tech, "Unknown")) %>%
+  mutate(status_clean = replace_na(status_clean, "Unknown")) %>%
+  mutate(management = replace_na(management, "Unknown")) %>%
+  mutate(usage_capacity = replace_na(usage_capacity, 0)) %>%
+  mutate(pressure_score = replace_na(pressure_score, 0)) %>%
+  mutate(crucialness_score = replace_na(crucialness_score, 0)) %>%
+  mutate(staleness_score = replace_na(staleness_score, 0)) 
+```
+
+## Measures used for Regionalisation Analysis
+
+The table below summarizes the measures of interest we will be using for our clustering analysis. The measure description, formula and data field used to derive the measures are also indicated in the table.
+
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| Measure Name      | Measure Description                                                                                                                                                   | Formula                                                                                                                                                                                | Data Field used   |
++:==================+:======================================================================================================================================================================+:=======================================================================================================================================================================================+:==================+
+| functional_wpt    | Total count of functional water points                                                                                                                                | Sum                                                                                                                                                                                    | #status_clean     |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| nonfunctional_wpt | Total count of non-functional water points                                                                                                                            | Sum                                                                                                                                                                                    | #status_clean     |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_functional    | Percentage of functional water points                                                                                                                                 | Numerator: Count of functional water points                                                                                                                                            | #status_clean     |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_nonfunctional | Percentage of non-functional water points                                                                                                                             | Numerator: Count of non-functional water points                                                                                                                                        | #status_clean     |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_handpump      | Percentage of water points using hand pump technology                                                                                                                 | Numerator: Count of water points using hand pump technology                                                                                                                            | #water_tech_clean |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_mechpump      | Percentage of water points using mechanical pump technology                                                                                                           | Numerator: Count of water points using mechanized pump technology                                                                                                                      | #water_tech_clean |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_rural         | Percentage of Rural water points                                                                                                                                      | Numerator: Count of rural water points                                                                                                                                                 | is_urban          |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_usage_1000M   | Percentage of water points with usage capacity \>= 1000 people per water point                                                                                        | Numerator: Count of water points with usage capacity \>= 1000 people per water point                                                                                                   | usage_capacity    |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_usage_1000L   | Percentage of water points with usage capacity \< 1000 people per water point                                                                                         | Numerator: water points with usage capacity \<1000 people per water point                                                                                                              | usage_capacity    |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pressure_wpt      | Pressure Score                                                                                                                                                        | According to WPDx, Pressure score is computed based on the ratio of people assigned to the water point over the theoretical maximum population which can be served based on technology | pressure_score    |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   | Pressure Score provides a measure of overuse of water points, where \>= 100% indicates overuse above recommended maximum.                                             | Numerator: water_point_population                                                                                                                                                      |                   |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: usage_capacity                                                                                                                                                            |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_overuse       | Percentage of overused water points                                                                                                                                   | Numerator: Count of Water points with pressure score \>= 100%                                                                                                                          | pressure_score    |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| crucial_wpt       | Crucialness Score                                                                                                                                                     | According to WPDx, Crucialness score is computed based o ratio of potential users to the total local population within a 1km radius of the water point.                                | crucialness_score |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   | Crucialness score provides a measure of water system redundancy and shows how important the water point is. The higher the score, the more important the water point. | Numerator: water_point_population                                                                                                                                                      |                   |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: local_population_1km                                                                                                                                                      |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_crucial       | Percentage of crucial water points                                                                                                                                    | Numerator: Count of Water points with Crucialness score of \>= 100%                                                                                                                    | crucialness_score |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| stale_wp          | Data Staleness Score                                                                                                                                                  | According to WPDx, Data staleness score is derived from report date using a [geometric decay model.]{.underline}                                                                       | staleness_score   |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   | Older data have a lower staleness score compared to newer data.                                                                                                       |                                                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_govt          | Percentage of water points managed by government                                                                                                                      | Numerator: Count of Water points managed by government                                                                                                                                 | #management_clean |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| pct_community     | Percentage of water points managed by community                                                                                                                       | Numerator: Count of Water points managed by community                                                                                                                                  | #management_clean |
+|                   |                                                                                                                                                                       |                                                                                                                                                                                        |                   |
+|                   |                                                                                                                                                                       | Denominator: Total water points                                                                                                                                                        |                   |
++-------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-------------------+
+
+## Understanding Data Fields of Interest
+
+### Functional Status
+
+**Rationale for using this variable**
+
+Functional status of water points can be determined by the *status_clean* variable in the data set. It was selected so that we can compute the total number of water points, as well as the number of functional and non-functional water points. Areas with high count and percentage of non-functional water points are area that we will be concerned with, since it is likely an indication of water supply and poor water quality issues.
+
+**Checking Unique Values**
+
+We use unique() function to identify the no. of categories or classifications each data field of interest has:
+
+```{r}
+#| eval: false
+
+unique(wp_nga$status_clean)
+```
+
+**Plot the count and percentage of water points by Functional Status**
+
+```{r fig.height=10, fig.width=10}
+#| eval: false
+
+
+ggplot(data= wp_nga, 
+       aes(x = fct_infreq(status_clean))) +
+  geom_bar(aes(fill = status_clean), show.legend = FALSE) +
+  ylim(0,50000) + 
+  geom_text(stat = 'count',
+           aes(label= paste0(after_stat(count), ', ', 
+                            round(after_stat(count)/
+                            sum(after_stat(count))*100, 2), '%')), 
+                            vjust= -0.5, size= 5) +
+  labs( y = "Count of Water Points", x = "Status of Water Points",
+        title = "Water Point by Functional Status") +
+  theme(text = element_text(size = 20), 
+        axis.ticks.x= element_blank(), 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
+
+![](images/Water%20Point%20by%20Functional%20Status.png)
+
+The graph above show that there is 55% of functional water points, 34% of non-functional water points and the remaining 11% of water points are of unknown status. However, functional and non-functional water points are "named" in different ways, and needs to be grouped together to make the analysis more meaningful.
+
+**Extract Water Points by Functional Status**
+
+Therefore, the following code chunk was used to group water points of similar functional status. There will be 2 main groups by functional status:
+
+1\) Functional water points
+
+2\) Non-Functional Water points
+
+We will also need to determine the *total water points* as this will form the denominator for many other measures we will be using for clustering. We will then derive the percentage of functional and non-functional water points with the measures.
+
+We used mutate() and st_intersects() function to perform the task of creating the new measures we want into a dataframe.
+
+```{r}
+#| eval: false
+
+
+wpt_functional <- wp_nga %>%
+  filter(status_clean %in%
+           c("Functional", 
+             "Functional but not in use",
+             "Functional but needs repair"))
+
+
+wpt_nonfunctional <- wp_nga %>%
+  filter(status_clean  %in%
+           c("Abandoned/Decommissioned", 
+             "Abandoned",
+             "Non-Functional",
+             "Non functional due to dry season",
+             "Non-Functional due to dry season"))
+
+
+nga_wp <- nga %>% 
+  mutate(`total wpt` = lengths(
+    st_intersects(nga, wp_nga))) %>%
+  mutate(`functional_wpt` = lengths(
+    st_intersects(nga, wpt_functional))) %>%
+  mutate(`nonfunctional_wpt` = lengths(
+    st_intersects(nga, wpt_nonfunctional))) 
+
+```
+
+**Check Statistics of New Measures created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measures created using summary() function.
+
+```{r}
+#| eval: false
+
+
+summary(nga_wp$`total wpt`)
+summary(nga_wp$`functional_wpt`)
+summary(nga_wp$`nonfunctional_wpt`)
+```
+
+### Water Technology Type
+
+**Rationale for using this variable**
+
+Water Technology Type can be determined from water_tech variable in the data set. It describes technology or system being used to transport the water from the source to the point of collection (e.g. Hand pump, mechanized pump etc). We believe water technology is important as a more backward technology like hand pump may result in poorer water supply to the area, while a more advanced technology like mechanized pump may result in better water supply to the area.
+
+**Checking Unique Values**
+
+```{r}
+#| eval: false
+
+unique(wp_nga$water_tech)
+```
+
+**Plot the count and percentage of water points by Water Technology Type**
+
+```{r fig.height = 8, fig.width = 10}
+#| eval: false
+
+
+ggplot(data= wp_nga, 
+       aes(x = fct_infreq(water_tech))) +
+  geom_bar(aes(fill = water_tech), show.legend = FALSE) +
+  ylim(0,65000) + 
+  geom_text(stat = 'count',
+           aes(label= paste0(after_stat(count), ', ', 
+                            round(after_stat(count)/
+                            sum(after_stat(count))*100, 2), '%')), 
+                            vjust= -0.5, size= 5) +
+  labs( y = "Count of Water Points", x = "Water Technology Type",
+        title = "Water Point by Water Technology Type") +
+  theme(text = element_text(size = 15), 
+        axis.ticks.x= element_blank(), 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
+
+![](images/Water%20Point%20Water%20Technology%20Type.png)
+
+The graph above show the 62% of the water points use Hand pump, 27% use Mechanized pumps, less than 1 % uses Tapstand, Rope and Bucket. The remaining 11% of water points are unknown.
+
+**Extracting Water Points by Technology Type**
+
+Since Hand pumps and Mechanized pumps are the main water technology used, we will extract the number of waters that use Hand pumps and Mechanized pumps, in order to get the percentage of water points that uses Hand pumps and Mechanized pumps for our clustering analysis.
+
+```{r}
+#| eval: false
+
+wpt_handpump <- wp_nga %>%
+  filter(water_tech == "Hand Pump")
+
+wpt_mechpump <- wp_nga %>%
+  filter(water_tech == "Mechanized Pump")
+
+nga_wp <- nga_wp %>% 
+  mutate(`handpump_wpt` = lengths(
+    st_intersects(nga, wpt_handpump))) %>%
+  mutate(`mechpump_wpt` = lengths(
+    st_intersects(nga, wpt_mechpump)))
+
+```
+
+**Check Statistics of New Measures created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measures created using summary() function.
+
+```{r}
+#| eval: false
+
+summary(nga_wp$`handpump_wpt`)
+summary(nga_wp$`mechpump_wpt`)
+```
+
+### Urban or Rural Area
+
+**Rationale for using this variable**
+
+We use *is_urban* in data set to determine if the water point is in a urban or rural area. The rationale for choosing this variable is because we believe that rural water points tend to face water shortage and poor water quality.
+
+**Checking Unique Values**
+
+```{r}
+#| eval: false
+
+
+unique(wp_nga$is_urban)
+```
+
+**Plot the count and percentage of water points by urban vs rural areas**
+
+```{r fig.height = 5, fig.width = 5}
+#| eval: false
+
+ggplot(data= wp_nga, 
+       aes(x = fct_infreq(as.character(is_urban)))) +
+  geom_bar(aes(fill = as.character(is_urban)), show.legend = FALSE) +
+  ylim(0,90000) + 
+  geom_text(stat = 'count',
+           aes(label= paste0(after_stat(count), ', ', 
+                            round(after_stat(count)/
+                            sum(after_stat(count))*100, 2), '%')), 
+                            vjust= -0.5, size= 4) +
+  labs( y = "Count of Water Points", x = "Urban Water Point?",
+        title = "Water Point by Urban vs Rural Area") +
+  theme(text = element_text(size = 15), 
+        axis.ticks.x= element_blank(), 
+        axis.text.x = element_text(angle = 0, vjust = 5, hjust = 1))
+
+
+```
+
+![](images/Water%20Point%20by%20Urban%20vs%20Rural%20Area.png)
+
+Based on the graph above, 79% of the water points are located in rural areas of Nigeria. Only 21% are located in urban areas.
+
+**Extract Water Points in Rural Area**
+
+Similar to previous steps, we will extract the number of rural water points and use it to compute the percentage of rural water points in subsequent section.
+
+```{r}
+#| eval: false
+wpt_rural <- wp_nga %>%
+  filter(is_urban == FALSE)
+
+
+nga_wp <- nga_wp %>% 
+  mutate(`rural_wpt` = lengths(
+    st_intersects(nga, wpt_rural)))
+
+```
+
+**Check Statistics of New Measure created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measure created using summary() function.
+
+```{r}
+#| eval: false
+
+
+summary(nga_wp$`rural_wpt`)
+```
+
+### Management Type
+
+**Rationale for using this variable**
+
+We are curious to see if the management type affects water supply and quality to different regions in Nigeria. For example, would government managed water points be more efficient than community managed water points?
+
+**Checking Unique Values**
+
+```{r}
+#| eval: false
+unique(wp_nga$management)
+```
+
+**Plot the count and percentage of water points by Management Type**
+
+```{r fig.height = 10, fig.width = 10}
+#| eval: false
+
+ggplot(data= wp_nga, 
+       aes(x = fct_infreq(management))) +
+  geom_bar(aes(fill = management), show.legend = FALSE) +
+  ylim(0,45000) + 
+  geom_text(stat = 'count',
+          aes(label= paste0(after_stat(count), ', ', 
+                            round(after_stat(count)/
+                            sum(after_stat(count))*100, 2), '%')), 
+                            vjust= -0.5, size= 5)  +
+  labs( y = "Count of Water Points", x = "Management Type",
+        title = "Water Points by Management Type") +
+  theme(text = element_text(size = 20),
+        axis.ticks.x= element_blank(), 
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+```
+
+![](images/Water%20Points%20by%20Management%20Type.png)
+
+While direct government and community managed water points are most common, we also have other diverse management types such as "School Management" and "Other institutional".
+
+**Extracting Water Points by Management Type**
+
+Therefore, to simplify the analysis, we have grouped the categories into:
+
+1.  Government managed water points
+
+2.  Community managed water points
+
+3.  Others managed water points
+
+we will use these new measures created to compute the percentage against total water points in subsequent section.
+
+```{r}
+#| eval: false
+
+
+wpt_govt <- wp_nga %>%
+  filter(management == "Direct Government Operation")
+
+
+wpt_community <- wp_nga %>%
+  filter(management == "Community Management")
+
+
+wpt_other_managed <- wp_nga %>%
+  filter(management  %in%
+           c("Health Care Facility", 
+             "Unknown", 
+             "Other",
+             "School Management",
+             "Health Care Facility",
+             "Private Operator/Delegated Management",
+             "Other Institutional Management"))
+
+
+nga_wp <- nga_wp %>% 
+  mutate(`govt_wpt` = lengths(
+    st_intersects(nga, wpt_govt))) %>%
+  mutate(`community_wpt` = lengths(
+    st_intersects(nga, wpt_community))) %>%
+  mutate(`other_managed_wpt` = lengths(
+    st_intersects(nga, wpt_other_managed)))
+```
+
+**Check Statistics of New Measures created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measures created using summary() function.
+
+```{r}
+#| eval: false
+
+summary(nga_wp$`govt_wpt`)
+summary(nga_wp$`community_wpt`)
+summary(nga_wp$`other_managed_wpt`)
+```
+
+### Maximum Usage Capacity
+
+**Rationale for using this variable**
+
+We believe that the maximum usage capacity of water points will affect the water supply and quality to a region. The higher the maximum usage capacity the less water shortage to a region, vice versa.
+
+**Checking for Unique Values**
+
+```{r}
+#| eval: false
+
+unique (wp_nga$usage_capacity)
+```
+
+**Plot the count and percentage of water points by max usage capacity**
+
+```{r fig.height = 5, fig.width = 8}
+#| eval: false
+
+
+ggplot(data= wp_nga, 
+       aes(x = fct_infreq(as.character(usage_capacity)))) +
+  geom_bar(aes(fill = as.character(usage_capacity)), show.legend = FALSE) +
+  ylim(0,80000) + 
+  geom_text(stat = 'count',
+           aes(label= paste0(after_stat(count), ', ', 
+                            round(after_stat(count)/
+                            sum(after_stat(count))*100, 2), '%')), 
+                            vjust= -0.5, size= 5) +
+  labs( y = "Count of Water Points", x = "Maximum Usage Capacity",
+        title = "Water Points by Maximum Usage Capacity") +
+  theme(text = element_text(size = 15), 
+        axis.ticks.x= element_blank(), 
+        axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 1))
+```
+
+![](images/Water%20Points%20by%20Maximum%20Usage%20Capacity.png)
+
+Based on graph above, majority 72% of the water points are at a max usage capacity of 300 people per water point, 27% of the water points are at the highest max usage capacity of 1000 people per water point. the remaining max usage capacity are quite low %.
+
+**Extracting Water Points by Max Usage Capacity**
+
+We will now extract water points based on max usage capacity in two main categories:
+
+1.  Water point with max usage capacity \>= 1000 people
+
+2.  Water point with max usage capacity \< 1000 people
+
+The new measure created will then be used to compute their respective percentage against total water points.
+
+```{r}
+#| eval: false
+
+
+wpt_c1000M <- wp_nga %>%
+  filter(usage_capacity == "1000")
+
+
+wpt_c1000L <- wp_nga %>%
+  filter(usage_capacity %in%
+           c("300","250","50"))
+
+
+nga_wp <- nga_wp %>% 
+  mutate(`1000M_wpt` = lengths(
+    st_intersects(nga, wpt_c1000M))) %>%
+  mutate(`1000L_wpt` = lengths(
+    st_intersects(nga, wpt_c1000L))) 
+```
+
+**Check Statistics of New Measures created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measures created using summary() function.
+
+```{r}
+#| eval: false
+
+summary(nga_wp$`1000M_wpt`)
+summary(nga_wp$`1000L_wpt`)
+```
+
+### Crucialness Score
+
+**Rationale for using this variable**
+
+According to WPdx, crucialness score (0-100%) is the ratio of potential users to the total local population within a 1km radius of thewater point. Crucialness provides a measure of water system redundancy. For example, if there is only 1 waterpoint within a 1km radius, the water point crucialness score is 100%, meaning that there are no nearby alternatives.If there are two functional water points within 1km, the crucialness score for each point will be \~50% indicatingthere is some redundancy in the system, so if one water point is broken down, users have an alternative waterpoint available. For non-functional water points, the crucialness score shows how important the water point wouldbe if it were to be rehabilitated
+
+**Plot the count and percentage of water points by crucialness score**
+
+```{r}
+#| eval: false
+
+crucial_score <- wp_nga %>%
+  filter(crucialness_score >= 1)
+
+nga_wp <- nga_wp %>% 
+  mutate(`crucial_wpt` = lengths(
+    st_intersects(nga, crucial_score)))
+```
+
+**Check Statistics of New Measure created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measure created using summary() function.
+
+```{r}
+#| eval: false
+
+summary(nga_wp$crucial_wpt)
+```
+
+### Pressure Score
+
+**Rationale for using this variable**
+
+According to WPdx, Pressure score (0-100%) is calculated based on the ratio of the number of people assigned to that water pointover the theoretical maximum population which can be served based on the technology. If a point is serving lessthan the recommended maximum, the pressure score will be less than 100% (i.e., 250/500 = 0.5). If a point isserving more than the recommended maximum, the pressure score will be over 100% (i.e., 750/500 = 150%). The following recommended maximum values (extended from Sphere Guidelines)
+
+**Plot the count and percentage of water points by pressure score**
+
+```{r}
+#| eval: false
+
+
+press_score <- wp_nga %>%
+  filter(pressure_score >= 1)
+
+nga_wp <- nga_wp %>% 
+  mutate(`pressure_wpt` = lengths(
+    st_intersects(nga, press_score)))
+```
+
+**Check Statistics of New Measure created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measure created using summary() function.
+
+```{r}
+#| eval: false
+
+summary(nga_wp$pressure_wpt)
+```
+
+### Data Staleness
+
+**Rationale for using this variable**
+
+According to WPdx, Data Staleness score provides a relative measure of the average age of data available from the WPdx+ dataset. The main parameter that controls this score is the 'target value' - for example, in the current state we define that a 20-year-old report is worth only 10% in comparison to a 'day-old' report. All other reports are then given values based on their report age using a geometric decay model. These value assignments are qualitative and are only meant to give a rough estimate of data 'freshness'. We believe that data that are collected more recently have a higher reliability to indicate the water situation in a region.
+
+**Plot the count and percentage of water points by staleness score**
+
+```{r}
+#| eval: false
+
+stale_score <- wp_nga %>%
+  filter(staleness_score > 0.6)
+
+nga_wp <- nga_wp %>% 
+  mutate(`freshdata_wpt` = lengths(
+    st_intersects(nga, stale_score)))
+```
+
+**Check Statistics of New Measure created**
+
+To ensure our data wrangling process is correct, we perform a check on the new measure created using summary() function.
+
+```{r}
+#| eval: false
+
+summary(nga_wp$freshdata_wpt)
+```
+
+## Preparing dataframe of clustering variables
+
+### Computing Percentages Measures
+
+We will now compute the % measures based on the new measures count derived in the earlier sections. We will use mutate() again to compute these %:
+
+```{r}
+#| eval: false
+
+
+nga_clust <- nga_wp %>%
+  mutate(`pct_functional` = `functional_wpt`/`total wpt`) %>%
+  mutate(`pct_nonfunctional` = `nonfunctional_wpt`/`total wpt`) %>%
+  mutate(`pct_handpump`= `handpump_wpt`/`total wpt`) %>%
+  mutate(`pct_mechpump`= `mechpump_wpt`/`total wpt`) %>%
+  mutate(`pct_rural`= `rural_wpt`/`total wpt`) %>%
+  mutate(`pct_govt`= `govt_wpt`/`total wpt`) %>%
+  mutate(`pct_community`= `community_wpt`/`total wpt`) %>%
+  mutate(`pct_other_managed`= `other_managed_wpt`/`total wpt`) %>%
+  mutate(`pct_cap1000more`= `1000M_wpt`/`total wpt`) %>%
+  mutate(`pct_cap1000less`= `1000L_wpt`/`total wpt`) %>%
+  mutate(`pct_crucial`= `crucial_wpt`/`total wpt`) %>%
+  mutate(`pct_pressure`= `pressure_wpt`/`total wpt`) %>%
+  mutate(`pct_fresh`= `freshdata_wpt`/`total wpt`) %>%
+  select(3, 19:20, 32:44) 
+```
+
+### Replace NA values with 0
+
+Since there are quite a few areas with 0 total water points, they will give rise to NA when we compute % measures. Therefore, we will use the code chunk below to replace NA with 0:
+
+```{r}
+#| eval: false
+
+nga_clust <- na_replace(nga_clust, 0)
+
+kable(summary(nga_clust))
+```
+
+### Save Cluster Analysis in a rds file
+
+```{r}
+#| eval: false
+
+write_rds(nga_clust, "data/rds/nga_clust.rds")
+```
+
+## Exploratory Data Analysis (EDA)
+
+We will read the rds file using the code chunk below:
+
+```{r}
+nga_clust <- read_rds("data/rds/nga_clust.rds")
+```
+
+### EDA using statistical graphics
+
+#### Distribution of Clustering Variables
+
+We will plot the density plots to understand the distribution of each of the clustering variables of interest using the following code chunks:
+
+```{r}
+nga_plot <- nga_clust %>%
+  st_drop_geometry() %>%
+  replace(is.na(.), 0) %>%
+  melt()
+
+```
+
+```{r fig.height = 15, fig.width = 10}
+
+ggplot(data = nga_plot, aes(x = value)) + 
+  stat_density(fill = "salmon", alpha = 0.5) + 
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(labels = scales::comma) +
+  theme(text = element_text(size = 20)) +
+  facet_wrap(~variable, scales = "free", ncol = 3 )
+```
+
+From the density plot, some variables do not conform to normal distribution, and the values can be very wide ranging. Therefore, we should perform log transformation and standardisation before proceeding with our analysis.
+
+### EDA using choropleth map
+
+#### Distribution of % of Functional and Non-Functional Water Point
+
+```{r}
+pct_functional_wp <- tm_shape(nga_clust) +
+  tm_fill("pct_functional", 
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Functional Water Points",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+pct_non_functional_wp <- tm_shape(nga_clust) +
+  tm_fill("pct_nonfunctional",
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Non-Functional Water Points",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+
+tmap_arrange(pct_functional_wp, pct_non_functional_wp)
+```
+
+**Observation**
+
+-   Naturally, the functional and non-functional water points maps have "inverse" spatial distributions.
+
+-   The proportion (%) of functional water points and proportion (%) of non-functional water points maps appear to be more meaningful than the absolute count of functional water points and non-functional water points maps. The proportion (%) of non-functional water points provides for better comparison of the areas most affected by water shortages and poor water supply and quality.
+
+-   The North region of Nigeria have relatively higher proportion of functional water points compared to the South region. Therefore, the South region also have relatively higher percentage of non-functional water points.
+
+-   This early inference could mean focusing resources in addressing the non-functional water points in the South regions of Nigeria. However, further geospatial analysis is required to confirm our observation.
+
+#### Distribution of % of Crucial and Overused Water Points
+
+```{r}
+crucial_cmap <- tm_shape(nga_clust) +
+  tm_fill("pct_crucial",
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Crucial Water points",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+overuse_cmap <- tm_shape(nga_clust) +
+  tm_fill("pct_pressure",
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Overused Water Points",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+
+fresh_cmap <- tm_shape(nga_clust) +
+  tm_fill("pct_fresh",
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Fresh Data Water Points",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+tmap_arrange(crucial_cmap, overuse_cmap)
+```
+
+**Observation**
+
+-   In the extreme north and south regions, there are water points that appear to be both crucial (no alternative water points in same area) and yet over-used (indicated by high pressure score).
+
+-   We would be concerned about the regions (southwest) where there is a high % of non-functional water points, high % of crucial water points AND high % of overused water points.
+
+-   These regions with all 3 phenomenons are at very high risk of water shortages and poor water quality issues. They should be regions to be prioritized for any water point rehab program.
+
+#### Distribution of % of Government and Community Managed Water Points
+
+```{r}
+govt_cmap <- tm_shape(nga_clust) +
+  tm_fill("pct_govt",
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Government managed",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+comm_cmap <- tm_shape(nga_clust) +
+  tm_fill("pct_community",
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Community managed",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+
+others_cmap <- tm_shape(nga_clust) +
+  tm_fill("pct_other_managed",
+          style = "jenks",
+          palette = blues9) +
+  tm_borders(alpha = 0.5) +
+  tm_layout(main.title = "% of Others managed",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.5,
+            legend.width = 0.5,
+            frame=TRUE)
+
+tmap_arrange(govt_cmap, comm_cmap,others_cmap, ncol = 3)
+```
+
+**Observation**
+
+-   It is interesting to note that the regions with higher % of water points that are managed directly by government has higher % of functional water points.
+
+-   Those regions with a high % of water points managed by other institutions tend to have higher % of non-functional water points. This suggest that the management body of water points affect water supply and quality to a region.
+
+## Correlation Analysis
+
+Before we perform cluster analysis, it is important for us to ensure that the cluster variables are not highly correlated. We use [*corrplot.mixed()*](https://cran.r-project.org/web/packages/corrplot/corrplot.pdf) function of [**corrplot**](https://cran.r-project.org/web/packages/corrplot/vignettes/corrplot-intro.html) package to visualise and analyse the correlation of the input variables as shown in the code chunk below:
+
+### Correlation Plot
+
+```{r fig.height = 10, fig.width = 10}
+
+nga_clean <- nga_clust %>%
+  st_drop_geometry() %>%
+  replace(is.na(.), 0)
+
+cluster_vars.cor = cor(nga_clean[,2:16])
+corrplot.mixed(cluster_vars.cor,
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black", number.cex=1.1, tl.cex=1.5)
+
+```
+
+### Interpretation of Correlation Plot
+
+From the correlation plot result above, we can identify **3 pairs of** variables that are highly correlated, defined as correlation coefficient, r \>= 0.85. They are:
+
+-   "pct_handpump" and "pct_cap1000less"
+
+-   "pct_mechpump" and "pct_cap1000more"
+
+-   "pct_rural" and "pct_fresh"
+
+Therefore, we will remove "pct_cap1000less", "pct_cap1000more" and "pct_fresh"
+
+## Variables for Clustering Analysis
+
+We will prepare a new dataframe for clustering analysis. Here's a summary of the steps:
+
+1.  Drop highly correlated variables using *select(-)* function, leaving behind the desired variables that are not highly correlated.
+
+2.  Replace the NA values by 0 using *replace(is.na())* function
+
+3.  Drop geometry from the dataframe using *st_drop_geometry()* function
+
+4.  Use the row.names() function to set the id for each row using their respective shapeName (ADM2_EN) and remove the shapeName (ADM2_EN) column from the dataframe.
+
+5.  Prepare a tabular format using kable() function
+
+```{r}
+nga_wp_clust <- nga_clust %>%
+  select(-"pct_cap1000less", -"pct_cap1000more", -"pct_fresh") %>%
+  replace(is.na(.), 0)
+
+nga_clust_var <- nga_wp_clust %>%
+  st_drop_geometry()
+
+
+row.names(nga_clust_var) <- nga_clust_var$ADM2_EN 
+nga_clust_var <- select(nga_clust_var, c(2:13))
+
+               
+kable(head(nga_clust_var ,10))
+```
+
+## Data Transformation and Standardisation
+
+In general, multiple variables will be used in cluster analysis. It is not unusual their values range are different. In order to avoid the cluster analysis result is biased to clustering variables with large values, it is useful to standardize the input variables before performing cluster analysis.
+
+We will first examine the raw values of the clustering variables
+
+### Raw Values with no Standardisation or Transformation
+
+```{r fig.height = 15, fig.width = 10}
+
+
+
+h1 <- ggplot(data=nga_clust_var,
+             aes(x= functional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h2 <- ggplot(data=nga_clust_var, 
+             aes(x= nonfunctional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h3 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_functional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+    geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h4 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_nonfunctional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h5 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_handpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h6 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_mechpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h7 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_rural,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h8 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_govt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h9 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_community,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h10 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+
+h10 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h11 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_crucial,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+h12 <- ggplot(data=nga_clust_var, 
+             aes(x= pct_pressure,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+
+ggarrange(h1, h2, h3, h4,h5, h6, h7,h8, h9, h10, h11, h12,
+          ncol = 3, 
+          nrow = 4)
+
+
+```
+
+From the graph above, we can see that some variables are skewed. For example, nonfunctional_wpt and functional_wpt are right skewed, pct_rural distribution is left skewed. Therefore, we will perform log transformation to convert it into a less skewed distribution so that it does not affect clustering results.
+
+There are also many 0 values in the dataset. However, we will not drop these 0 values as it may be legitimate that the area has no water points.
+
+### **Log Transformation**
+
+Log transformation is a data transformation method in which it replaces each variable x with a log(x).
+
+```{r fig.height = 15, fig.width = 10}
+
+
+lognga_derived <- nga_clust_var
+lognga_derived[,1:12] <- log(lognga_derived[,1:12]+1)
+
+
+lh1 <- ggplot(data=lognga_derived,
+             aes(x= functional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh2 <- ggplot(data=lognga_derived, 
+             aes(x= nonfunctional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh3 <- ggplot(data=lognga_derived, 
+             aes(x= pct_functional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+    geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh4 <- ggplot(data=lognga_derived, 
+             aes(x= pct_nonfunctional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh5 <- ggplot(data=lognga_derived, 
+             aes(x= pct_handpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh6 <- ggplot(data=lognga_derived, 
+             aes(x= pct_mechpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh7 <- ggplot(data=lognga_derived, 
+             aes(x= pct_rural,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh8 <- ggplot(data=lognga_derived, 
+             aes(x= pct_govt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh9 <- ggplot(data=lognga_derived, 
+             aes(x= pct_community,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh10 <- ggplot(data=lognga_derived, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+
+lh10 <- ggplot(data=lognga_derived, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh11 <- ggplot(data=lognga_derived, 
+             aes(x= pct_crucial,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+lh12 <- ggplot(data=lognga_derived, 
+             aes(x= pct_pressure,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+
+ggarrange(lh1, lh2, lh3, lh4,lh5, lh6, lh7,lh8, lh9, lh10, lh11, lh12,
+          ncol = 3, 
+          nrow = 4)
+
+
+```
+
+From the graph above, we can see that the distribution is less skewed after performing log transformation.
+
+### Min-Max Standardisation
+
+After we transformed the clustering variables, we will apply min-max standardization.
+
+In the code chunk below, *normalize()* of *heatmaply* package is used to standardise the clustering variables by using Min-Max method. The *summary()* is then used to display the summary statistics of the standardised clustering variables.
+
+```{r}
+nga.std <- normalize(lognga_derived)
+kable(summary(nga.std))
+```
+
+```{r fig.height = 15, fig.width = 10}
+
+nga.std <- as.data.frame(nga.std)
+
+
+
+mmlh1 <- ggplot(data=nga.std,
+             aes(x= functional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh2 <- ggplot(data=nga.std, 
+             aes(x= nonfunctional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh3 <- ggplot(data=nga.std, 
+             aes(x= pct_functional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+    geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh4 <- ggplot(data=nga.std, 
+             aes(x= pct_nonfunctional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh5 <- ggplot(data=nga.std, 
+             aes(x= pct_handpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh6 <- ggplot(data=nga.std, 
+             aes(x= pct_mechpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh7 <- ggplot(data=nga.std, 
+             aes(x= pct_rural,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh8 <- ggplot(data=nga.std, 
+             aes(x= pct_govt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh9 <- ggplot(data=nga.std, 
+             aes(x= pct_community,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh10 <- ggplot(data=nga.std, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+
+mmlh10 <- ggplot(data=nga.std, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh11 <- ggplot(data=nga.std, 
+             aes(x= pct_crucial,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+mmlh12 <- ggplot(data=nga.std, 
+             aes(x= pct_pressure,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightblue")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+  
+
+ggarrange(mmlh1, mmlh2, mmlh3, mmlh4, mmlh5, mmlh6, mmlh7, mmlh8, mmlh9, mmlh10, mmlh11, mmlh12,
+          ncol = 3, 
+          nrow = 4)
+
+```
+
+Notice that the values range of the Min-max standardised clustering variables are 0-1 now.
+
+### Z-Score Standardisation
+
+Beside Min-max standardisation, we also tried z-score standardisation to see which method is more appropriate and suitable for our dataset.
+
+The mean and standard deviation of the Z-score standardised clustering variables are 0 and 1 respectively. *describe()* of **psych** package is used here instead of *summary()* of Base R because it provides standard deviation.
+
+```{r}
+nga.z <- scale(lognga_derived)
+describe(nga.z)
+```
+
+```{r fig.height = 15, fig.width = 10}
+
+nga.z <- as.data.frame(nga.z)
+
+zlh1 <- ggplot(data=nga.z,
+             aes(x= functional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh2 <- ggplot(data=nga.z, 
+             aes(x= nonfunctional_wpt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh3 <- ggplot(data=nga.z, 
+             aes(x= pct_functional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+    geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh4 <- ggplot(data=nga.z, 
+             aes(x= pct_nonfunctional,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh5 <- ggplot(data=nga.z, 
+             aes(x= pct_handpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh6 <- ggplot(data=nga.z, 
+             aes(x= pct_mechpump,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh7 <- ggplot(data=nga.z, 
+             aes(x= pct_rural,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh8 <- ggplot(data=nga.z, 
+             aes(x= pct_govt,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh9 <- ggplot(data=nga.z, 
+             aes(x= pct_community,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh10 <- ggplot(data=nga.z, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+
+zlh10 <- ggplot(data=nga.z, 
+             aes(x= pct_other_managed,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh11 <- ggplot(data=nga.z, 
+             aes(x= pct_crucial,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+zlh12 <- ggplot(data=nga.z, 
+             aes(x= pct_pressure,
+                 y= ..density..)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="lightgreen")+
+  geom_density(color="black",
+               alpha = 0.5)+
+  theme(panel.background= element_blank())
+
+
+
+ggarrange(zlh1, zlh2, zlh3, zlh4, zlh5, zlh6, zlh7, zlh8, zlh9, zlh10, zlh11, zlh12,
+          ncol = 3, 
+          nrow = 4)
+```
+
+**Warning: Z-score standardization method should only be used if we could assume all variables come from normal distribution.**
+
+.
+
+### Comparison of Transformed and Standardised Values
+
+```{r fig.height = 5, fig.width = 12}
+
+r <- ggplot(data=nga_clust_var, 
+             aes(x= `nonfunctional_wpt`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="grey") +
+  ggtitle("Raw")
+
+
+l <- ggplot(data=lognga_derived, 
+             aes(x= `nonfunctional_wpt`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="salmon") +
+  ggtitle("Log Transformational")
+
+
+s <- ggplot(data=nga.std, 
+       aes(x=`nonfunctional_wpt`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light blue") +
+  ggtitle("Min-Max Standardisation")
+
+
+z <- ggplot(data=nga.z, 
+       aes(x=`nonfunctional_wpt`)) +
+  geom_histogram(bins=20, 
+                 color="black", 
+                 fill="light green") +
+  ggtitle("Z-score Standardisation")
+
+ggarrange(r, l, s, z,
+          ncol = 4,
+          nrow = 1)
+```
+
+Based on the earlier Log transformed histogram plots, not all the variables follow a normal distribution. Therefore, min-max standardisation will be a more appropriate data standardisation method in our analysis.
+
+For the purpose of cluster analysis, we will use the log transformed and min-max standardised values.
+
+## **Conventional Clustering: Hierarchical Clustering**
+
+### **Computing of Distance Matrix**
+
+In R, many packages provide functions to calculate distance matrix. We will compute the proximity matrix by using *dist()* of R. *dist()* supports six distance proximity calculations, they are: **euclidean, maximum, manhattan, canberra, binary and minkowski**. The default is *euclidean* proximity matrix.
+
+Since our data is multi-dimension, we will use the `Manhattan` distance to compute the distance matrix instead of the standard `Eucluidean` distance.
+
+```{r}
+proxmat_m <- dist(nga.std, method = 'manhattan')
+
+```
+
+### Computing hierarchical clustering
+
+Hierarchical clustering (also called hierarchical cluster analysis or HCA) is a method of cluster analysis that seeks to build a hierarchy of clusters. Strategies for hierarchical clustering generally fall into two categories:
+
+-   **Agglomerative**: This is a "bottom-up" approach: Each observation starts in its own cluster, and pairs of clusters are merged as one moves up the hierarchy.
+
+-   **Divisive**: This is a "top-down" approach: All observations start in one cluster, and splits are performed recursively as one moves down the hierarchy.
+
+In general, the merges and splits are determined in a greedy manner. The results of hierarchical clustering are usually presented in a dendrogram.
+
+In R, there are several packages provide hierarchical clustering function. In this hands-on exercise, *hclust()* of R stats will be used.
+
+```{r}
+hclust_ward <- hclust(proxmat_m, method = 'ward.D')
+```
+
+```{r}
+plot(hclust_ward, cex = 0.6)
+```
+
+### **Determining Optimal Algorithm**
+
+To perform hierarchical clustering we have to identify the strongest clustering structures. The code chunk below will be used to compute the agglomerative coefficients of all hierarchical clustering algorithms.
+
+```{r}
+m <- c( "average", "single", "complete", "ward")
+names(m) <- c( "average", "single", "complete", "ward")
+
+ac <- function(x) {
+  agnes(nga.std, method = x)$ac
+}
+
+map_dbl(m, ac)
+```
+
+From the results above, **Ward** method provides the strongest clustering alogarithm among the four methods assessed.
+
+### Determining the Optimal Clusters
+
++---------------------------------+--------------------------------------------------------+-----------------------------------------------------+
+| Type                            | Logic                                                  | Methods                                             |
++=================================+========================================================+=====================================================+
+| **Direct methods**              | Consists of optimizing a criterion                     | -   Elbow Method aka Within cluster sums of squares |
+|                                 |                                                        |                                                     |
+|                                 |                                                        | -   Average silhouette Method                       |
++---------------------------------+--------------------------------------------------------+-----------------------------------------------------+
+| **Statistical testing methods** | Consists of comparing evidence against null hypothesis | -   Gap Statistic                                   |
++---------------------------------+--------------------------------------------------------+-----------------------------------------------------+
+
+#### Elbow Method
+
+Note that, the elbow method is sometimes ambiguous. An alternative is the average silhouette method (Kaufman and Rousseeuw \[1990\]) which can be also used with any clustering approach.
+
+```{r}
+elbow_h <- fviz_nbclust(nga.std, 
+             hcut,
+             k.max = 15,
+             method = "wss") +
+geom_vline(xintercept = 3, linetype = 2)
+
+plot(elbow_h)
+```
+
+The optimal number of clusters based on the elbow method is 2. However, clustering analysis will require k to be more than 2. Hence, if we look further leftwards in the graph, the optimal number of cluster will be **k =3**.
+
+#### Average Silhouette Method
+
+The average silhouette approach measures the quality of a clustering. That is, it determines how well each object lies within its cluster. A high average silhouette width indicates a good clustering.
+
+Average silhouette method computes the average silhouette of observations for different values of k. The optimal number of clusters k is the one that maximize the average silhouette over a range of possible values for k (Kaufman and Rousseeuw 1990).
+
+```{r}
+silhouette_h <-fviz_nbclust(nga.std, 
+             hcut, 
+             k.max = 15,
+             method = "silhouette")+
+geom_vline(xintercept = 3, linetype = 2)
+
+plot(silhouette_h)
+```
+
+The optimal number of clusters based on the average silhouette method is 3. However, clustering analysis will require k to be more than 2. Hence, if we look further leftwards in the graph, the optimal number of cluster will be **k =3**.
+
+#### Gap Statistics Method
+
+The *gap statistic* has been published by [R. Tibshirani, G. Walther, and T. Hastie (Standford University, 2001)](http://web.stanford.edu/~hastie/Papers/gap.pdf). The approach can be applied to any clustering method.
+
+The gap statistic compares the total within intra-cluster variation for different values of k with their expected values under null reference distribution of the data. The estimate of the optimal clusters will be value that maximize the gap statistic (i.e, that yields the largest gap statistic). This means that the clustering structure is far away from the random uniform distribution of points.
+
+```{r}
+set.seed(1234)
+gap_stat_h <- clusGap(nga.std, 
+                    FUN = hcut, 
+                    nstart = 25, 
+                    K.max = 15, 
+                    B = 50)
+
+print(gap_stat_h, method = "firstmax")
+
+```
+
+```{r}
+fviz_gap_stat(gap_stat_h)+
+geom_vline(xintercept = 3, linetype = 2)
+```
+
+From the above plot, we can conclude that the optimal number of cluster for the Hierarchical Clustering Algorithm is **14** based on gap statistics. However, from k=3 onwards the increase in gap statistics becomes marginal.
+
+#### Deciding on optimal no. of clusters
+
+We have summarized our results in the table below.
+
++--------------------+------------------+-----------------------------------------------------------------------------------------------+
+| Method             | Optimal Clusters | Remarks                                                                                       |
++====================+==================+===============================================================================================+
+| Elbow              | 3                |                                                                                               |
++--------------------+------------------+-----------------------------------------------------------------------------------------------+
+| Average Sihoulette | 3                | R output shows k=2 as optimal clusters but we need k to be more than 2. The next best is k=3. |
++--------------------+------------------+-----------------------------------------------------------------------------------------------+
+| Gap statistics     | 14               | However, from k=3 on-wards the increase in gap statistics becomes marginal.                   |
++--------------------+------------------+-----------------------------------------------------------------------------------------------+
+
+We have decided to select the **optimal cluster to be 3.**
+
+### Interpreting the dendrogram
+
+In the dendrogram above, each leaf corresponds to one observation. As we move up the tree, observations that are similar to each other are combined into branches, which are themselves fused at a higher height.
+
+The height of the fusion, provided on the vertical axis, indicates the (dis)similarity between two observations. The higher the height of the fusion, the less similar the observations are. Note that, conclusions about the proximity of two observations can be drawn only based on the height where branches containing those two observations first are fused. We cannot use the proximity of two observations along the horizontal axis as a criteria of their similarity.
+
+It's also possible to draw the dendrogram with a border around the selected clusters by using [*rect.hclust()*](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/rect.hclust.html) of R stats. The argument *border* is used to specify the border colors for the rectangles.
+
+```{r fig.height = 10, fig.width = 15}
+
+set.seed(1234)
+hclust_ward <- hclust(proxmat_m, method = 'ward.D')
+plot(hclust_ward, cex = 0.5)
+rect.hclust(hclust_ward, 
+            k = 3, 
+            border = 2:5)
+```
+
+### Visually-driven hierarchical clustering analysis
+
+#### Chloropeth Mapping
+
+```{r}
+hgroups <- as.factor(cutree(hclust_ward, k=3))
+ngacluster <- cbind(nga_wp_clust, as.matrix(hgroups)) %>%
+  rename(`HCLUSTER`=`as.matrix.hgroups.`)
+
+ngacluster %>%
+  group_by(`HCLUSTER`) %>%
+  summarise_all("mean")
+
+```
+
+```{r fig.height=10, fig.width=10}
+h_cmap <- tm_shape (ngacluster) +
+          tm_polygons("HCLUSTER",
+          title = "Hierarchical Cluster") +
+          tm_layout(main.title = "Hierarchical Clustering",
+                    main.title.position = "center",
+                    main.title.size = 1.5,
+                    legend.height = 0.8, 
+                    legend.width = 0.8,
+                    legend.text.size = 0.8,
+                    legend.title.size = 0.8,
+                    main.title.fontface = "bold",
+                    frame = TRUE) +
+        tmap_mode("plot")+
+        tm_borders(alpha = 0.5) +
+        tm_compass(type="4star",
+                  position=c("right", "top"))
+
+h_cmap
+```
+
+The choropleth map above reveals the clusters are very fragmented. For example, cluster 2 is spread-ed across north and south regions. The is one of the major limitation when non-spatial clustering algorithm such as hierarchical cluster analysis method is used.
+
+#### Heatmap
+
+In this section, we will learn how to perform visually-driven hierarchical clustering analysis by using *heatmaply* package.With **heatmaply**, we are able to build both highly interactive cluster heatmap or static cluster heatmap.
+
+```{r fig.height = 20, fig.width = 10}
+
+nga_mat <- data.matrix(nga.std)
+
+heatmaply(nga_mat,
+          Colv=NA,
+          dist_method = "manhattan",
+          hclust_method = "ward.D",
+          seriate = "OLO",
+          colors = Blues,
+          k_row = 3,
+          margins = c(NA,200,60,NA),
+          fontsize_row = 4,
+          fontsize_col = 10,
+          main="Geographic Segmentation of Nigeria by Water Point indicators",
+          xlab = "Water Point Indicators",
+          ylab = "Townships of Nigeria"
+          )
+```
+
+#### **Parallel Plot**
+
+```{r fig.height = 10,fig.width=10}
+
+ggparcoord(data = ngacluster,
+           columns = c(2:13), groupColumn = 14,
+           scale = "std",
+           alphaLines = 0.2,
+           showPoints = TRUE,
+           boxplot = TRUE,
+           title = "Multiple Parallel Coordinates Plots of Hierarchical Clusters") +
+  
+  facet_wrap(~`HCLUSTER`, ncol =3) +
+  theme(text=element_text(size=15),
+        legend.text=element_text(size=15),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, size = 15))
+
+```
+
+**Interpretation**:
+
++------------+------------------------------------------------------------------------------------------+
+| Cluster    | Observed Characteristics                                                                 |
++============+==========================================================================================+
+| Cluster 1  | -   High number of absolute water points, suggesting more developed water infrastructure |
+|            |                                                                                          |
+|            | -   Lower % of non-functional water points                                               |
+|            |                                                                                          |
+|            | -   Higher % of use of hand pumps                                                        |
++------------+------------------------------------------------------------------------------------------+
+| Cluster 2  | -   Poor data collection                                                                 |
+|            |                                                                                          |
+|            | -   Very rural areas                                                                     |
+|            |                                                                                          |
+|            | -   Likely under-developed in terms of water infrastructure                              |
++------------+------------------------------------------------------------------------------------------+
+| Cluster 3  | -   Higher % of crucial water points                                                     |
+|            |                                                                                          |
+|            | -   Higher % of use of mechanized pumps                                                  |
+|            |                                                                                          |
+|            | -   Higher % of government managed water points                                          |
++------------+------------------------------------------------------------------------------------------+
+
+## Spatially Constrained Clustering
+
+In this section, we will explore 3 different spatially constrained clustering algorithm namely:
+
+-   Spatial 'K'luster Analysis by Tree Edge Removal(SKATER)
+
+-   Spatially Constrained Ward-Like Hierarchical Clustering
+
+-   Spatially Constrained Hierarchical Clustering
+
+## SKATER
+
+### Converting into Spatial Polygons Data Frame
+
+First, we need to convert `nga` into SpatialPolygonsDataFrame. This is because SKATER function only support **sp** objects such as SpatialPolygonDataFrame.
+
+The code chunk below uses [*as_Spatial()*](https://r-spatial.github.io/sf/reference/coerce-methods.html) of **sf** package to convert *nga* into a SpatialPolygonDataFrame called nga_sp.
+
+We will drop the region "bakassi" that is with no neighbour.
+
+```{r}
+nga_cluster_sf <- nga_wp_clust %>% 
+                  filter(nga_wp_clust$`ADM2_EN` != "bakassi")
+
+nga_sp <- as_Spatial(nga_cluster_sf)
+```
+
+### Computing Neighbour List
+
+Next, [poly2nd()](https://r-spatial.github.io/spdep/reference/poly2nb.html) of **spdep** package will be used to compute the neighbours list from polygon list.
+
+```{r}
+nga.nb <- poly2nb(nga_sp, queen = TRUE) 
+summary(nga.nb)
+
+```
+
+### **Visualising of neighbours**
+
+We can plot the neighbours list on nga_ap using the code chunk below. Since we now can plot the community area boundaries as well, we plot this graph on top of the map. The first plot command gives the boundaries. This is followed by the plot of the neighbor list object, with coordinates applied to the original SpatialPolygonDataFrame (Shan state township boundaries) to extract the centroids of the polygons. These are used as the nodes for the graph representation. We also set the color to blue and specify add=TRUE to plot the network on top of the boundaries.
+
+```{r fig.height = 10, fig.width = 10}
+
+plot(nga_sp, 
+     border=grey(.5))
+plot(nga.nb, 
+     coordinates(nga_sp), 
+     col="blue", 
+     add=TRUE)
+```
+
+Note that if you plot the network first and then the boundaries, some of the areas will be clipped. This is because the plotting area is determined by the characteristics of the first plot. In this example, because the boundary map extends further than the graph, we plot it first.
+
+### Computing minimum spanning tree
+
+### 
+
+#### Calculating edge cost
+
+Next, [*nbcosts()*](https://r-spatial.github.io/spdep/reference/nbcosts.html) of **spdep** package is used to compute the cost of each edge. It is the distance between it nodes. This function compute this distance using a data.frame with observations vector in each node.
+
+The code chunk below is used to compute the cost of each edge:
+
+```{r}
+
+lcosts <- nbcosts(nga.nb, nga.std)
+
+```
+
+For each observation, this gives the pairwise dissimilarity between its values on the selected variables and the values for the neighbouring observation (from the neighbour list). Basically, this is the notion of a generalised weight for a spatial weights matrix.
+
+Next, We will incorporate these costs into a weights object in the same way as we did in the calculation of inverse of distance weights. In other words, we convert the neighbour list to a list weights object by specifying the just computed ***lcosts*** as the weights.
+
+In order to achieve this, [*nb2listw()*](https://r-spatial.github.io/spdep/reference/nb2listw.html) of **spdep** package is used as shown in the code chunk below.
+
+Note that we specify the *style* as **B** to make sure the cost values are not row-standardised.
+
+```{r}
+
+nga.w <- nb2listw(nga.nb, 
+                  lcosts, 
+                  style="B",
+                  zero.policy = TRUE)
+summary(nga.w)
+```
+
+### Computing minimum spanning tree
+
+The minimum spanning tree is computed by mean of the [*mstree()*](https://r-spatial.github.io/spdep/reference/mstree.html) of **spdep** package as shown in the code chunk below.
+
+```{r}
+nga.mst <- mstree(nga.w)
+```
+
+After computing the MST, we can check its class and dimension by using the code chunk below.
+
+```{r}
+class(nga.mst)
+```
+
+Note that the dimension is 772 and not 773. This is because the minimum spanning tree consists on n-1 edges (links) in order to traverse all the nodes.
+
+We can display the content of nga*.mst* by using *head()* as shown in the code chunk below.
+
+```{r}
+dim(nga.mst)
+```
+
+```{r}
+head(nga.mst)
+```
+
+The plot method for the MST include a way to show the observation numbers of the nodes in addition to the edge. As before, we plot this together with the township boundaries. We can see how the initial neighbour list is simplified to just one edge connecting each of the nodes, while passing through all the nodes.
+
+```{r fig.height = 10, fig.width = 10}
+
+plot(nga_sp, border=gray(.5))
+plot.mst(nga.mst, 
+         coordinates(nga_sp), 
+         col="blue", 
+         cex.lab=0.7, 
+         cex.circles=0.005, 
+         add=TRUE)
+```
+
+### Computing spatially constrained clusters using SKATER method
+
+The code chunk below compute the spatially constrained cluster using [*skater()*](https://r-spatial.github.io/spdep/reference/skater.html) of **spdep** package. To note ncuts = k=1.
+
+```{r}
+clust3 <- spdep::skater(edges = nga.mst[,1:2], 
+                 data = nga.std, 
+                 method = "manhattan", 
+                 ncuts = 2)
+```
+
+```{r}
+str(clust3)
+```
+
+The most interesting component of this list structure is the groups vector containing the labels of the cluster to which each observation belongs (as before, the label itself is arbitary). This is followed by a detailed summary for each of the clusters in the edges.groups list. Sum of squares measures are given as ssto for the total and ssw to show the effect of each of the cuts on the overall criterion.
+
+We can find out how many observations are in each cluster by means of the table command. Parenthetially, we can also find this as the dimension of each vector in the lists contained in edges.groups.
+
+```{r}
+ccs3 <- clust3$groups
+table(ccs3)
+```
+
+Lastly, we can also plot the pruned tree that shows the five clusters on top of the country.
+
+```{r fig.height= 10, fig.width= 10}
+
+plot(nga_sp, border=gray(.5))
+plot(clust3, 
+     coordinates(nga_sp), 
+     cex.lab=.8,
+     groups.colors=palette(),
+     cex.circles=0.005, 
+     add=TRUE)
+```
+
+### Visualizing the clusters in choropleth map
+
+The code chunk below is used to plot the newly derived clusters by using SKATER method.
+
+```{r}
+groups_mat <- as.matrix(clust3$groups)
+nga_spatialcluster <- cbind(nga_cluster_sf, as.factor(groups_mat)) %>%
+  rename(`SP_CLUSTER`=`as.factor.groups_mat.`)
+
+nga_spatialcluster  %>%
+  group_by(`SP_CLUSTER`) %>%
+  summarise_all("mean")
+```
+
+```{r fig.height= 10, fig.width= 10}
+skater_cmap <- tm_shape (nga_spatialcluster) +
+          tm_polygons("SP_CLUSTER",
+          title = "SKATER Cluster") +
+          tm_layout(main.title = "SKATER Clustering",
+                    main.title.position = "center",
+                    main.title.size = 1.5,
+                    legend.height = 0.8, 
+                    legend.width = 0.8,
+                    legend.text.size = 0.8,
+                    legend.title.size = 0.8,
+                    main.title.fontface = "bold",
+                    frame = TRUE) +
+        tmap_mode("plot")+
+        tm_borders(alpha = 0.5) +
+        tm_compass(type="4star",
+                  position=c("right", "top"))
+
+skater_cmap
+```
+
+For easy comparison, it will be better to place both the hierarchical clustering and spatially constrained hierarchical clustering maps next to each other.
+
+```{r}
+
+
+
+
+```
+
+**Observation**
+
+The Spatially constrained SKATER method yielded better results than the conventional hierarchical clustering method. From the right map, the SKATER clusters were better defined and less fragmented.
+
+### Parallel Plot
+
+```{r fig.height = 10, fig.width=10}
+
+ggparcoord(data = nga_spatialcluster,
+           columns = c(2:13), groupColumn = 14,
+           scale = "std",
+           alphaLines = 0.2,
+           showPoints = TRUE,
+           boxplot = TRUE,
+           title = "Multiple Parallel Coordinates Plots of SKATER Clusters") +
+  
+  facet_wrap(~`SP_CLUSTER`, ncol =3) +
+  theme(text=element_text(size=15),
+        legend.text=element_text(size=15),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, size = 15))
+
+```
+
+**Interpretation**
+
++-------------+-------------------------------------------------------------+---------------------+
+| Cluster     | Observations                                                | Geography           |
++=============+=============================================================+=====================+
+| 1           | -   Higher % of water points directly managed by government | The rest of Nigeria |
+|             |                                                             |                     |
+|             | -   Better developed Water Infrastructure                   |                     |
++-------------+-------------------------------------------------------------+---------------------+
+| 2           | -   Higher % of non-functional water points                 | Central             |
+|             |                                                             |                     |
+|             | -   Higher % of rural water points                          |                     |
++-------------+-------------------------------------------------------------+---------------------+
+| 3           | -   higher % of crucial water points (with no alternatives) | North-west          |
+|             |                                                             |                     |
+|             | -   Higher % of water point managed by community            |                     |
++-------------+-------------------------------------------------------------+---------------------+
+
+## ClustGeo Method
+
+[**ClustGeo**](https://cran.r-project.org/web/packages/ClustGeo/) package is an R package specially designed to support the need of performing spatially constrained cluster analysis. More specifically, it provides a Ward-like hierarchical clustering algorithm called `hclustgeo()` including spatial/geographical constraints.
+
+In the nutshell, the algorithm uses two dissimilarity matrices D0 and D1 along with a mixing parameter alpha, whereby the value of alpha must be a real number between \[0, 1\]. D0 can be non-Euclidean and the weights of the observations can be non-uniform. It gives the dissimilarities in the **attribute/clustering variable space**. D1, on the other hand, gives the dissimilarities in the **constraint space**. The criterion minimised at each stage is a convex combination of the homogeneity criterion calculated with D0 and the homogeneity criterion calculated with D1.
+
+The idea is then to determine a value of alpha which increases the spatial contiguity without deteriorating too much the quality of the solution based on the variables of interest. This need is supported by a function called `choicealpha()`.
+
+## ClustGeo: Ward-like hierarchical clustering
+
+ClustGeo package provides function called `hclustgeo()` to perform a typical Ward-like hierarchical clustering just like `hclust()` you learned in previous section.
+
+To perform non-spatially constrained hierarchical clustering, we only need to provide the function a dissimilarity matrix as shown in the code chunk below.
+
+```{r}
+nongeo_cluster <- hclustgeo(proxmat_m)
+plot(nongeo_cluster, cex = 0.5)
+rect.hclust(nongeo_cluster, 
+            k = 3, 
+            border = 2:5)
+```
+
+#### **Chloropeth Mapping**
+
+Similarly, we can plot the clusters on a categorical area shaded map by using the following codes:
+
+```{r}
+geo_groups <- as.factor(cutree(nongeo_cluster, k=3))
+```
+
+```{r}
+nga_geo_cluster <- cbind(nga_wp_clust, as.matrix(geo_groups)) %>%
+  rename(`GEOCLUSTER` = `as.matrix.geo_groups.`)
+
+nga_geo_cluster  %>%
+  group_by(`GEOCLUSTER`) %>%
+  summarise_all("mean")
+```
+
+```{r fig.height=10, fig.width=10}
+
+geo_cmap <- tm_shape (nga_geo_cluster) +
+          tm_polygons("GEOCLUSTER",
+          title = "Ward like Hierarchical ClustGeo Cluster") +
+          tm_layout(main.title = "Ward like Hierarchical ClustGeo Cluster",
+                    main.title.position = "center",
+                    main.title.size = 1.5,
+                    legend.height = 0.8, 
+                    legend.width = 0.8,
+                    legend.text.size = 0.8,
+                    legend.title.size = 0.8,
+                    main.title.fontface = "bold",
+                    frame = TRUE) +
+        tmap_mode("plot")+
+        tm_borders(alpha = 0.5) +
+        tm_compass(type="4star",
+                  position=c("right", "top"))
+
+geo_cmap
+```
+
+The Ward like Hierarchical ClustGeo Cluster method also resulted in fragmented clustering. Not very ideal as compared to SKATER.
+
+#### Parallel Plot
+
+```{r fig.height = 10, fig.width=15}
+
+ggparcoord(data = nga_geo_cluster,
+           columns = c(2:13), groupColumn = 14,
+           scale = "std",
+           alphaLines = 0.2,
+           showPoints = TRUE,
+           boxplot = TRUE,
+           title = "Multiple Parallel Coordinates Plots of ClustGeo Clusters") +
+  
+  facet_wrap(~`GEOCLUSTER`, ncol =3) +
+  theme(text=element_text(size=15),
+        legend.text=element_text(size=15),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, size = 15))
+
+```
+
+## Spatially Constrained Hierarchical Clustering
+
+Before we can performed spatially constrained hierarchical clustering, a spatial distance matrix will be derived by using [`st_distance()`](https://r-spatial.github.io/sf/reference/geos_measures.html) of sf package.
+
+```{r}
+dist <- st_distance(nga_wp_clust, nga_wp_clust)
+distmat <- as.dist(dist)
+```
+
+Notice that `as.dist()` is used to convert the data frame into matrix.
+
+Next, `choicealpha()` will be used to determine a suitable value for the mixing parameter alpha as shown in the code chunk below.
+
+```{r}
+cr <- choicealpha(proxmat_m, distmat, range.alpha = seq(0, 1, 0.1), K=3, graph = TRUE)
+```
+
+With reference to the graphs above, alpha = 0.75 will be used as shown in the code chunk below.
+
+```{r}
+clustG <- hclustgeo(proxmat_m, distmat, alpha = 0.75)
+```
+
+```{r}
+groupsG <- as.factor(cutree(clustG, k=3))
+```
+
+### Chloropeth Mapping
+
+We will then join back the group list with *nga* polygon feature data frame by using the code chunk below.
+
+```{r}
+nga_Gcluster <- cbind(nga_wp_clust, as.matrix(groupsG)) %>%
+  rename(`GCLUSTER` = `as.matrix.groupsG.`)
+
+nga_Gcluster %>%
+  group_by(`GCLUSTER`) %>%
+  summarise_all("mean")
+```
+
+```{r fig.height=10, fig.width=10}
+G_cmap <- tm_shape (nga_Gcluster ) +
+          tm_polygons("GCLUSTER",
+          title = "Spatially Constrained Hierarchical Clustering") +
+          tm_layout(main.title = "Spatially Constrained Hierarchical Clustering",
+                    main.title.position = "center",
+                    main.title.size = 1.5,
+                    legend.height = 0.8, 
+                    legend.width = 0.8,
+                    legend.text.size = 0.8,
+                    legend.title.size = 0.8,
+                    main.title.fontface = "bold",
+                    frame = TRUE) +
+        tmap_mode("plot")+
+        tm_borders(alpha = 0.5) +
+        tm_compass(type="4star",
+                  position=c("right", "top"))
+
+G_cmap
+```
+
+### Box Plot by Clustering Variables
+
+```{r fig.height= 15, fig.width=10 }
+
+
+b1 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=functional_wpt)) +
+  geom_boxplot() 
+
+
+b2 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=nonfunctional_wpt)) +
+  geom_boxplot() 
+
+
+b3 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_functional)) +
+  geom_boxplot() 
+
+
+b4 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_nonfunctional)) +
+  geom_boxplot() 
+
+
+b5 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_handpump)) +
+  geom_boxplot() 
+ 
+
+b6 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_mechpump)) +
+  geom_boxplot() 
+
+
+b7 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_rural)) +
+  geom_boxplot() 
+
+
+b8 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_govt)) +
+  geom_boxplot() 
+
+
+b9 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_community)) +
+  geom_boxplot() 
+
+
+b10 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_other_managed)) +
+  geom_boxplot() 
+
+
+b11 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_crucial)) +
+  geom_boxplot() 
+ 
+
+b12 <- ggplot(data = nga_Gcluster,
+       aes(x = GCLUSTER, y=pct_pressure)) +
+  geom_boxplot() 
+
+
+
+b1 + b2 + b3 + b4 + b5 + b6 + b7 + b8 + b9 + b10 + b11 + b12 +
+  plot_layout(ncol = 4) 
+  
+
+```
+
+### Parallel Plot
+
+```{r fig.height = 10, fig.width=15}
+
+ggparcoord(data = nga_Gcluster,
+           columns = c(2:13), groupColumn = 14,
+           scale = "std",
+           alphaLines = 0.2,
+           showPoints = TRUE,
+           boxplot = TRUE,
+           title = "Multiple Parallel Coordinates Plots of Spatially Constrained Hierarchical Clusters") +
+  
+  facet_wrap(~`GCLUSTER`, ncol =3) +
+  theme(text=element_text(size=15),
+        legend.text=element_text(size=15),
+        axis.text.x = element_text(angle = 90, vjust = 0.5, size = 15))
+
+
+
+```
+
+**Interpretation**
+
++-----------+---------------------------------------------------------------------------------+------------------+
+| Cluster   | Observations                                                                    | Geography / Risk |
++===========+=================================================================================+==================+
+| Cluster 1 | -   Higher % of water points managed by other institution bodies                | North West /     |
+|           |                                                                                 |                  |
+|           | -   Higher % of mechanised pumps                                                | High Risk        |
+|           |                                                                                 |                  |
+|           | -   Higher % of crucial and over-use water-points                               |                  |
+|           |                                                                                 |                  |
+|           | -   Higher % of non-functional water points; Lower % of functional water points |                  |
++-----------+---------------------------------------------------------------------------------+------------------+
+| Cluster 2 | -   Higher % of water points directly managed by government                     | North East /     |
+|           |                                                                                 |                  |
+|           | -   Better developed Water Infrastructure                                       | Low Risk         |
+|           |                                                                                 |                  |
+|           | -   Higher % of functional water points; Lower % of non-functional water points |                  |
+|           |                                                                                 |                  |
+|           | -   Higher % of hand pumps                                                      |                  |
+|           |                                                                                 |                  |
+|           | -                                                                               |                  |
++-----------+---------------------------------------------------------------------------------+------------------+
+| Cluster 3 | -   Poor Data collection                                                        | South /          |
+|           |                                                                                 |                  |
+|           | -   Likely rural areas that are under-developed                                 | High Risk        |
++-----------+---------------------------------------------------------------------------------+------------------+
+
+## Conclusion
+
+### Comparison of Clustering approaches:
+
+```{r fig.height = 15, fig.width=15}
+tmap_arrange(h_cmap, skater_cmap, geo_cmap, G_cmap,
+             asp=NA, ncol=2)
+```
+
+In conclusion, the Spatially Constrained Hierarchical Clustering approach yielded the best results. We will able to interpret the results of 3 clusters meaningfully as shown in the table below.
+
++-----------+---------------------------------------------------------------------------------------+------------------+
+| Cluster   | Observations                                                                          | Geography / Risk |
++===========+=======================================================================================+==================+
+| Cluster 1 | -   Higher % of water points managed by other institution bodies                      | North West /     |
+|           |                                                                                       |                  |
+|           | -   Higher % of mechanised pumps                                                      | High Risk        |
+|           |                                                                                       |                  |
+|           | -   Higher % of crucial and over-use water-points                                     |                  |
+|           |                                                                                       |                  |
+|           | -   Higher % of non-functional water points; Lower % of functional water points       |                  |
++-----------+---------------------------------------------------------------------------------------+------------------+
+| Cluster 2 | -   Higher % of water points directly managed by government \| North East / \|        |                  |
+|           | -   Better developed Water Infrastructure \| Low Risk \|                              |                  |
+|           | -   Higher % of functional water points; Lower % of non-functional water points \| \| |                  |
+|           | -   Higher % of hand pumps \| \| \| \|                                                |                  |
++-----------+---------------------------------------------------------------------------------------+------------------+
+| Cluster 3 | -   Poor Data collection                                                              | South /          |
+|           |                                                                                       |                  |
+|           | -   Likely rural areas that are under-developed                                       | High Risk        |
++-----------+---------------------------------------------------------------------------------------+------------------+
