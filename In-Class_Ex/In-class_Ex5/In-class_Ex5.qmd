@@ -1,4 +1,474 @@
 ---
-title: "In-class Exercise 3"
+title: "In-class Exercise 5 - Geographically Weighted Logistic Regression (GWLR) and Application"
 editor: visual
 ---
+
+## Overview
+
+In this lesson, you will learn the basic concepts and methods of logistic regression specially designed for geographical data. Upon completion of this lesson, you will able to:
+
+-   Explain the similarities and differences between **Logistic Regression (LR)** algorithm versus **Geographical weighted Logistic Regression (GWLR)** algorithm.
+
+-   Calibrate predictive models by using appropriate Geographically Weighted Logistic Regression algorithm for geographical data.
+
+## Content
+
+-   Basic concepts and principles of Logistic Regression
+
+-   Geographically Weighted Logistic Regression methods
+
+    -   Weighting functions (kernel)
+
+    -   Weighting schemes
+
+    -   Bandwidth
+
+    -   Interpreting and Visualizing
+
+### Notes on Logistics Regression
+
+-   Relatively larger samples required
+
+-   Ensure no mulit-collinearity
+
+## Model Variables
+
+**Dependent Variables:** Water Point Status (i.e. Functional vs Non-Functional)
+
+**Independent Variables:**
+
+-   distance_to_primary_road;
+
+-   distance_to_secondary_road;
+
+-   distance_to_tertiary_road;
+
+-   distance_to_city;
+
+-   distance_to_town;
+
+-   water_point_population;
+
+-   local_population_1km;
+
+-   usage_capacity;
+
+-   is_urban;
+
+-   water_source_clean
+
+## **Packages Used**
+
+-   **sf** - for importing and handling geospatial data
+
+-   **tmap** - for creating thematic maps, such as Choropleth maps
+
+-   **spdep** - a collection of functions to create spatial weights matrix object
+
+-   **funModeling** - a collection of functions related to exploratory data analysis, data preparation, and model performance
+
+-   **tidyverse** -a collection of packages for performing data science tasks
+
+-   The following tidyverse packages will be used:
+
+    -   **readr** for importing delimited text file
+
+    -   **tidyr** for manipulating and tidying data
+
+    -   **dplyr** for wrangling and transforming data
+
+    -   **ggplot2** for data visualisation
+
+<!-- -->
+
+-   **corrplot** - A graphical display of a correlation matrix, confidence interval.
+
+<!-- -->
+
+-   **ggpubr** - provides some easy-to-use functions for creating and customizing 'ggplot2'- based publication ready plots.
+
+-   **blorr** - Tools for building binary logistic regression models
+
+-   **GWmodel** - Techniques from a particular branch of spatial statistics,termed geographically-weighted (GW) models. GW models suit situations when data are not described well by some global model, but where there are spatial regions where a suitably localised calibration provides a better description.
+
+    -   GW summary statistics
+
+    -   GW principal components analysis
+
+    -   GW discriminant analysis
+
+    -   GW regression
+
+-   **skimr** - provides a frictionless approach to summary statistics which conforms to the **principle of least surprise**, displaying summary statistics the user can skim quickly to understand their data.
+
+-   **Caret** - Comprehensive framework for building machine learning models in R.
+
+The code chunk to install and load the packages is shown below:
+
+```{r}
+pacman::p_load(sf, tidyverse, funModeling, blorr,corrplot, ggpubr, spdep, GWmodel, tmap, skimr, caret)
+```
+
+## Data Set
+
+There are two rds data-sets we will be using:
+
+-   Osun
+
+-   Osun_wp_sf
+
+### Importing Data Files
+
+Using read_rds, we import the "Osun" and "Osun_wp_sf" rds into R using the code chunk below:
+
+```{r}
+Osun_wp_sf <- read_rds("data/rds/Osun_wp_sf.rds")
+
+```
+
+```{r}
+Osun <- read_rds("data/rds/Osun.rds")
+```
+
+Next, we will use glimpse to check on the imported data:
+
+```{r}
+glimpse(Osun_wp_sf)
+```
+
+```{r}
+glimpse(Osun)
+```
+
+## Exploratory Data Analysis
+
+### **Count and percentage of water points by Functional Status**
+
+We will plot the count and percentage of water points by Functional Status - True and False:
+
+```{r}
+ggplot(data= Osun_wp_sf, 
+       aes(x = status)) +
+  geom_bar(aes(fill = status), show.legend = TRUE) +
+  ylim(0,3000)+
+  geom_text(stat = 'count',
+           aes(label= paste0(after_stat(count), ', ', 
+                            round(after_stat(count)/
+                            sum(after_stat(count))*100, 2), '%')), 
+                            vjust= -0.5, size= 5) +
+  labs( y = "Count of Water Points", x = "Status of Water Points",
+        title = "Water Point by Functional Status") +
+  theme(text = element_text(size = 10), 
+        axis.ticks.x= element_blank(), 
+        axis.text.x = element_text(angle = 0, vjust = 0.5, hjust = 1, size=10))
+
+```
+
+### 
+
+**Plot Map of water points by Functional Status**
+
+```{r}
+tmap_mode("view") 
+tm_shape(Osun) +
+tmap_options(check.and.fix = TRUE) + 
+               tm_polygons(alpha = 0.4) +
+tm_shape(Osun_wp_sf) +
+  tm_dots(col = "status",
+          alpha = 0.6)+
+  tm_view(set.zoom.limits = c(9,12))
+```
+
+### Summary Statistics with skimr
+
+```{r}
+Osun_wp_sf %>% 
+  skim()
+
+```
+
+## Data Wrangling
+
+-   Excluded missing values
+
+-   Recoded data type of usage capacity and convert to Factor rather than keeping it as numeric values. Converting to factor helps to derive dummy variable.
+
+```{r}
+Osun_wp_sf_clean <- Osun_wp_sf %>%
+  filter_at(vars(status,
+                 distance_to_primary_road,
+                 distance_to_secondary_road,
+                 distance_to_tertiary_road,
+                 distance_to_city,
+                 distance_to_town,
+                 water_point_population,
+                 local_population_1km,
+                 usage_capacity,
+                 is_urban,
+                 water_source_clean),
+            all_vars(!is.na(.))) %>%
+  mutate(usage_capacity = as.factor(usage_capacity))
+```
+
+## Correlation Analysis
+
+Drop the geometry columns from SF data frame:
+
+```{r}
+Osun_wp <- Osun_wp_sf_clean %>%
+  select(c(7,35:39,42:43,46:47,57)) %>%
+  st_set_geometry(NULL)
+```
+
+```{r fig.height=4, fig.width=4}
+cluster_vars.cor = cor(
+  Osun_wp[,2:7])
+corrplot.mixed(cluster_vars.cor,
+         lower = "ellipse", 
+               upper = "number",
+               tl.pos = "lt",
+               diag = "l",
+               tl.col = "black", number.cex=1.1, tl.cex=1.5)
+```
+
+### Interpretation of Correlation Plot
+
+From the correlation plot result above, we can conclude that there is no multi-collinearity. There is no highly correlated variables, defined as correlation coefficient, r \>= +/-0.8.
+
+## Building a Logistic Regression Model
+
+### Build a First Prototype of Logistic Regression Model
+
+We will use all the model variables listed to build our first version of the logistic regression model. We will use the code chunk below:
+
+```{r}
+
+modelv0 <- glm(status~ distance_to_primary_road+
+                 distance_to_secondary_road+
+                 distance_to_tertiary_road+
+                 distance_to_city+
+                 distance_to_town+
+                 water_point_population+
+                 local_population_1km+
+                 usage_capacity+
+                 is_urban+
+                 water_source_clean,
+             data = Osun_wp_sf_clean,
+             family = binomial(link = 'logit'))
+```
+
+Instead of using typical R report, we use the blr_regress() function from blorr. It will help generate a better report.
+
+```{r}
+
+blr_regress(modelv0)
+```
+
+### Interpretation of Logistic Regression
+
+**Screen through P-Values of Variables first**
+
+To exclude the following variables since P-Value is \>0.05:
+
+-   distance_to_primary_road
+
+-   distance_to_secondary_road
+
+Assess **Categorical Variables**:
+
+-   Positive values implies an above average correlation
+
+    -   water_source_cleanProtected Shallow Well
+
+    -   iwater_source_cleanProtected Spring
+
+-   Negative values implies an below average correlation
+
+    -   usage_capacity1000
+
+    -   is_urbanTRUE
+
+Assess **Continuous Variables**:
+
+-   Positive values implies an direct correlation
+
+-   Negative values implies an inverse correlation
+
+-   Magnitude of the Value gives the strength of correlation
+
+```{r}
+blr_confusion_matrix(modelv0, cutoff = 0.5)
+```
+
+### Refine Logistics Regression Model
+
+Since the previous model showed that distance_to_primary_road and distance_to_secondary_road were variables to exclude, we refined the logistic regression model by removing them from the original model. We run the refined model using the following code chunk:
+
+```{r}
+
+model <- glm(status~ distance_to_tertiary_road+
+                 distance_to_city+
+                 distance_to_town+
+                 water_point_population+
+                 local_population_1km+
+                 usage_capacity+
+                 is_urban+
+                 water_source_clean,
+             data = Osun_wp_sf_clean,
+             family = binomial(link = 'logit'))
+```
+
+```{r}
+blr_regress(model)
+```
+
+### Interpretation of Revised Model
+
+```{r}
+blr_confusion_matrix(model, cutoff = 0.5)
+```
+
+Notice, all variables now have P-Value less than 0.05.
+
+## Building Geographically Weighted Regression Model
+
+### Converting from SF to SP data frame
+
+```{r}
+Osun_wp_sp <- Osun_wp_sf_clean %>%
+  select(c(status,
+                 distance_to_primary_road,
+                 distance_to_secondary_road,
+                 distance_to_tertiary_road,
+                 distance_to_city,
+                 distance_to_town,
+                 water_point_population,
+                 local_population_1km,
+                 usage_capacity,
+                 is_urban,
+                 water_source_clean)) %>%
+  as_Spatial()
+Osun_wp_sp
+
+# Notice - No need to drop geometry column as you are converting one data set with geometrical features to another with geometrical features
+
+# Spatial point data frame
+```
+
+### Building a Fixed Bandwidth GWR model
+
+```{r}
+bw.fixed <- bw.ggwr(status ~
+                  distance_to_primary_road+
+                  distance_to_secondary_road+
+                  distance_to_tertiary_road+
+                  distance_to_city+
+                  distance_to_town+
+                  water_point_population+
+                  local_population_1km+
+                  usage_capacity+
+                  is_urban+
+                  water_source_clean,
+                data = Osun_wp_sp,
+                family = "binomial",
+                approach =  "AIC",
+                kernel = "gaussian",
+                adaptive = FALSE,
+                longlat = FALSE)
+```
+
+```{r}
+bw.fixed
+```
+
+```{r}
+gwlr.fixed <- ggwr.basic(status ~
+                  distance_to_primary_road+
+                  distance_to_secondary_road+
+                  distance_to_tertiary_road+
+                  distance_to_city+
+                  distance_to_town+
+                  water_point_population+
+                  local_population_1km+
+                  usage_capacity+
+                  is_urban+
+                  water_source_clean,
+                data = Osun_wp_sp,
+                bw = bw.fixed,
+                family = "binomial",
+                kernel = "gaussian",
+                adaptive = FALSE,
+                longlat = FALSE)
+```
+
+```{r}
+gwlr.fixed
+```
+
+At the global model (no geographical), no AICc. Hence, can only compare AIC.
+
+## Model Assessment
+
+To assess the performance of the gwLR, firstly, we will convert the SDF object as data frame by using the code chunk below:
+
+#SDF is a data frame. Write it out as a dataframe
+
+```{r}
+gwr.fixed <- as.data.frame(gwlr.fixed$SDF)
+```
+
+Next, we will label yhat values greater or equal to 0.5 (Probability Threshold Cut-off) into 1 else 0. The result of the logic comparison operation will be saved into a field called most.
+
+Create a new field called "most" using mutate
+
+```{r}
+gwr.fixed <- gwr.fixed %>%
+  mutate(most = ifelse(
+    gwr.fixed$yhat >= 0.5, T, F))
+```
+
+```{r}
+gwr.fixed$y <- as.factor(gwr.fixed$y)
+gwr.fixed$most <- as.factor(gwr.fixed$most)
+CM <- confusionMatrix(data=gwr.fixed$most, reference = gwr.fixed$y)
+CM
+```
+
+### Interpretation of Results
+
+-   Improvement in AIC
+
+-   Improvement in Accuracy, Sensitivity and Specificity, True Positive Prediction Value as seen in diagram below:
+
+-   ![](images/paste-FE430C29.png)
+
+## Visualization
+
+### Preparing data frame
+
+```{r}
+Osun_wp_sf_selected <- Osun_wp_sf_clean %>%
+  select(c(ADM2_EN, ADM2_PCODE,
+           ADM1_EN, ADM1_PCODE,
+           status))
+```
+
+```{r}
+gwr_sf.fixed <- cbind(Osun_wp_sf_selected, gwr.fixed)
+```
+
+### Visualizing Coefficient Estimates
+
+```{r}
+tmap_mode("view")
+prob_T <- tm_shape(Osun) +
+  tm_polygons(alpha = 0.1) +
+tm_shape(gwr_sf.fixed) +
+  tm_dots(col = "yhat",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(8,14))
+prob_T
+
+
+```
